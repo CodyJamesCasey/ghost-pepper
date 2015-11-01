@@ -1,0 +1,13 @@
+### Executable ###
+gp-client
+
+### CMake ###
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+
+### Assimp ###
+assimp_log.txt
