@@ -3,6 +3,7 @@ var gulp    = require('gulp'),
     path    = require('path');
 
 require('./sips/html')(gulp);
+require('./sips/less')(gulp);
 require('./sips/browserify')(gulp);
 
 gulp.task('server', function() {
@@ -12,4 +13,4 @@ gulp.task('server', function() {
   });
 });
 
-gulp.task('default', ['html', 'browserify', 'server']);
+gulp.task('default', ['html', 'less', 'browserify', 'server']);
