@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/CodyJamesCasey/ghost-pepper#readme",
   "dependencies": {
-    "express": "^4.13.3"
+    "express": "^4.13.3",
+    "leapjs": "^0.6.4"
   },
   "devDependencies": {
     "gulp": "^3.9.0",
