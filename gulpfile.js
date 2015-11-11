@@ -13,4 +13,4 @@ gulp.task('server', function() {
   });
 });
 
-gulp.task('default', ['html', 'less', 'browserify', 'server']);
+gulp.task('default', ['html', 'less', 'watchify', 'server']);
