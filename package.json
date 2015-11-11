@@ -1,0 +1,26 @@
+{
+  "name": "ghost-pepper",
+  "version": "1.0.0",
+  "description": "Interactive 3d hologram projection program",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodyJamesCasey/ghost-pepper.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CodyJamesCasey/ghost-pepper/issues"
+  },
+  "homepage": "https://github.com/CodyJamesCasey/ghost-pepper#readme",
+  "dependencies": {
+    "express": "^4.13.3"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-nodemon": "^2.0.4"
+  }
+}
