@@ -26,6 +26,8 @@ function canvasShtuff() {
             increasing = true;
         }
     }
+    var dataUrl = c.toDataURL("image/jpeg", 0.5);
+    socket.emit('paint event', { data: dataUrl });
     requestAnimationFrame(canvasShtuff);
 }
 requestAnimationFrame(canvasShtuff);
