@@ -10,7 +10,7 @@ require('./sips/browserify')(gulp);
 gulp.task('server', function() {
   nodemon({
     script: path.join(__dirname, 'server', 'index.js'),
-    ignore: ['client/*', 'gulpfile.js']
+    ignore: ['client/*', 'sips/*', 'gulpfile.js']
   });
 });
 
