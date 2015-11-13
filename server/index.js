@@ -10,11 +10,15 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'));
 });
 
+app.get('/ghost-pepper', function (req, res) {
+    res.sendFile(path.join(__dirname, '..', 'dist', 'ghost-pepper.html'));
+});
+
 io.on('connection', function(socket){
     console.log('a user connected');
 
     socket.on('paint event', function(data) {
-        console.log('paint! ', data);
+        socket.emit('img event', {data: data});
     });
 });
 

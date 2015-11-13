@@ -30,4 +30,3 @@ function canvasShtuff() {
     socket.emit('paint event', { data: dataUrl });
     requestAnimationFrame(canvasShtuff);
 }
-requestAnimationFrame(canvasShtuff);

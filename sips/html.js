@@ -5,7 +5,7 @@ var baseDir = path.join(__dirname, '..');
 
 module.exports = function(gulp) {
     gulp.task('html:build', function() {
-        gulp.src(path.join(baseDir, 'client', 'html', 'index.html'))
+        gulp.src(path.join(baseDir, 'client', 'html', '*.html'))
         .pipe(sourcemaps.init())
         .pipe(sourcemaps.write())
         .pipe(gulp.dest(path.join(baseDir, 'dist')));

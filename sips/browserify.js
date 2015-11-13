@@ -22,11 +22,11 @@ module.exports = function(gulp) {
             .pipe(gulp.dest(path.join(baseDir, 'dist')));
     });
 
-    gulp.task('watchify', function() {
+    gulp.task('watchify-client', function() {
         var bundler = browserify({
             paths: [
                 path.join(baseDir, 'node_modules'),   // For node modules
-                path.join(baseDir, 'client', 'js')  // The js source directory
+                path.join(baseDir, 'client')  // The js source directory
             ]
         });
         bundler.transform(babelify);
@@ -41,5 +41,26 @@ module.exports = function(gulp) {
             .pipe(source(path.join(baseDir, 'main.js')))
             .pipe(gulp.dest(path.join(baseDir, 'dist')));
     });
+
+    gulp.task('watchify-pi', function() {
+        var bundler = browserify({
+            paths: [
+                path.join(baseDir, 'node_modules'),   // For node modules
+                path.join(baseDir, 'client')  // The js source directory
+            ]
+        });
+        bundler.transform(babelify);
+        bundler = watchify(bundler);
+        bundler.on('update', function() {
+                bundler.bundle()
+                    .pipe(source(path.join(baseDir, 'ghost-pepper.js')))
+                    .pipe(gulp.dest(path.join(baseDir, 'dist')));
+            })
+            .add(path.join(baseDir, 'client', 'js', 'ghost-pepper.js'))
+            .bundle()
+            .pipe(source(path.join(baseDir, 'ghost-pepper.js')))
+            .pipe(gulp.dest(path.join(baseDir, 'dist')));
+    });
+
 
 }

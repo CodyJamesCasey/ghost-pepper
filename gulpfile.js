@@ -2,6 +2,7 @@ var gulp    = require('gulp'),
     nodemon = require('gulp-nodemon'),
     path    = require('path');
 
+require('./sips/clean')(gulp);
 require('./sips/html')(gulp);
 require('./sips/less')(gulp);
 require('./sips/browserify')(gulp);
@@ -13,4 +14,4 @@ gulp.task('server', function() {
   });
 });
 
-gulp.task('default', ['html', 'less', 'watchify', 'server']);
+gulp.task('default', ['clean', 'html', 'less', 'watchify-client', 'watchify-pi', 'server']);
