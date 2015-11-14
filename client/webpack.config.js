@@ -19,7 +19,8 @@ module.exports = {
   },
   output:   {
     path:       BUILD_PATH,
-    filename:   'client.js'
+    filename:   'client.js',
+    publicPath: '/static/'
   },
   plugins: [new HtmlWebpackPlugin(HTML_OPTS)],
   module:   {

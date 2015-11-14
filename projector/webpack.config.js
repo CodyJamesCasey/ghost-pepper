@@ -19,7 +19,8 @@ module.exports = {
   },
   output:   {
     path:       BUILD_PATH,
-    filename:   'projector.js'
+    filename:   'projector.js',
+    publicPath: '/static/'
   },
   plugins: [new HtmlWebpackPlugin(HTML_OPTS)],
   module:   {
