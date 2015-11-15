@@ -22,7 +22,7 @@
     top: 30px;
     left: 30px;
     width: 250px;
-    height: 40px;
+    height: 35px;
     background-image: url(../../../../assets/logo.png);
     background-repeat: no-repeat;
     background-size: contain;
@@ -33,6 +33,34 @@
     position: absolute;
     top: 20px;
     right: 25px;
+  }
+
+
+  &__loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300px;
+    height: 80px;
+    opacity: 0;
+    transform: translateX(-150px) translateY(-40px) scale(0.75);
+    transition: all 250ms;
+
+    &--visible {
+      opacity: 1.0;
+      transform: translateX(-150px) translateY(-40px) scale(1.0);
+    }
+  }
+
+  &__loading-summary {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    color: white;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 0.4px;
   }
 
   &__footer {

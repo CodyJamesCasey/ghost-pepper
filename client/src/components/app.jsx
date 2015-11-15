@@ -1,14 +1,13 @@
 import React from 'react';
+import ThemeManager from 'material-ui/lib/styles/theme-manager';
+import ThemeDecorator from 'material-ui/lib/styles/theme-decorator';
 
-import { Provider, connect } from 'react-redux';
+import theme from '../theme';
 
 // Load component styles
 require('./app.scss');
 
-// @connect(state => ({
-//   sidebarVisible:   state.ui.sidebarVisible,
-//   currentPageTitle: state.nav.pageTitle
-// }))
+@ThemeDecorator(ThemeManager.getMuiTheme(theme))
 export default class App extends React.Component {
   render() {
     return (
