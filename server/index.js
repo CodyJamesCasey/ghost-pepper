@@ -7,6 +7,8 @@ const path      = require('path');
 const peer      = require('peer');
 const io        = require('socket.io');
 
+const hub       = require('./hub');
+
 let app         = express();
 let server      = http.Server(app);
 let socket      = io(server);
@@ -31,17 +33,7 @@ app.post('/api/uploads', upload.array('assets'), (req, res) => {
   return res.status(200).send();
 });
 
-socket.on('connection', (conn) => {
-  console.log('a user connected');
-
-  conn.on('paint event', (data) => {
-    console.log('paint! ', data);
-  });
-
-  socket.on('leap event', (data) => {
-    io.emit('gesture event', data);
-  });
-});
+socket.on('connection', hub.handleSocketConnection);
 
 server.listen(3000, () => {
   console.log('listening on *:3000');
