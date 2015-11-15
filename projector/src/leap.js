@@ -1,4 +1,4 @@
-import { loop } from 'leapjs';
+import Leap from 'leapjs';
 
 import { EVENT_LEAP_DATA_UPDATED } from './constants';
 
@@ -8,7 +8,7 @@ export function start(socket) {
   let newX, newY, newZ;
   let thetaChanged;
 
-  loop(frame => {
+  Leap.loop(frame => {
     // Only care about the first hand
     let hand = frame.hands.length > 0 ? frame.hands[0] : null;
     if (hand) {

@@ -2,6 +2,7 @@ import { EVENT_IMAGE_UPDATED, EVENT_SCREEN_SIZE_CHANGED } from './constants';
 
 let img;
 let canvas;
+let context;
 
 export function create(socket) {
   let width = window.innerWidth;

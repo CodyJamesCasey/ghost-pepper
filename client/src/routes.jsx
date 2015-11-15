@@ -2,9 +2,9 @@ import React from 'react';
 import { Router, Route, IndexRoute } from 'react-router';
 
 // Pages
-import HomePage from 'components/pages/home/home';
-import ModelsPage from 'components/pages/models/models';
-import NotFoundPage from 'components/pages/404/404';
+import MainPage from 'components/pages/main';
+import AboutPage from 'components/pages/about';
+import NotFoundPage from 'components/pages/404';
 // History
 import history from './history';
 // Application
@@ -14,8 +14,8 @@ export default function() {
   return (
     <Router history={history}>
       <Route path="/" component={App}>
-        <IndexRoute component={HomePage}/>
-        <Route path="/models" component={ModelsPage}/>
+        <IndexRoute component={MainPage}/>
+        <Route path="/about" component={AboutPage}/>
         <Route path="*" component={NotFoundPage}/>
       </Route>
     </Router>

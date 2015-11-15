@@ -22,7 +22,7 @@ require('./base.scss');
 require('./icons.scss');
 
 // Start the flux emitters
-startEmitters();
+startEmitters(store.dispatch);
 
 // Create the app element
 let appEl = document.createElement('div');

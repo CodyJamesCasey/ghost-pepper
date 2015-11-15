@@ -44,6 +44,8 @@
     "morgan": "^1.6.1",
     "multer": "^1.1.0",
     "object-assign": "^4.0.1",
+    "peer": "^0.2.8",
+    "peerjs": "^0.3.14",
     "react": "^0.14.2",
     "react-addons-create-fragment": "^0.14.2",
     "react-addons-pure-render-mixin": "^0.14.2",
