@@ -14,6 +14,7 @@ const EVENT_PROJECTOR_READY          = 'projector:ready';
 const EVENT_ROTATION_VECTOR_CHANGED  = 'projector:vector-changed';
 const EVENT_RESOLUTION_CHANGED       = 'projector:resolution-changed';
 const EVENT_FRAME_RENDERED           = 'client:frame-rendered';
+const EVENT_PROJECTOR_DISCONNECTED   = 'projector:disconnected';
 
 // The function that is only not-null when the tunnel is live; Sends the latest
 // frame to the projector.
@@ -46,11 +47,11 @@ export function start(dispatch) {
     // Get in the queue for a tunnel
     socket.emit(EVENT_CLIENT_READY, { clientId: clientId });
     // Subscribe to when the tunnel is ready
-    socket.on(EVENT_PROJECTOR_READY, (payload) => {
+    socket.on(EVENT_PROJECTOR_READY, payload => {
       // Get the tunnel id
-      let { tunnelId } = payload;
+      let { projectorId } = payload;
       // Connect to the tunnel
-      tunnel = peer.connect(tunnelId);
+      tunnel = peer.connect(projectorId);
       // Subscribe to relevant events
       tunnel.on('open', () => {
         // Update the tunnel connection status
@@ -89,6 +90,12 @@ export function start(dispatch) {
       tunnel.on('error', err => {
         // Update the tunnel connection status
         dispatch(updateTunnelStatus(false, err));
+        // Clear emitFrameRendered
+        emitFrameRendered = null;
+      });
+      socket.on(EVENT_PROJECTOR_DISCONNECTED, () => {
+        // Update the tunnel connection status
+        dispatch(updateTunnelStatus(false, 'The projector disconnected'));
         // Clear emitFrameRendered
         emitFrameRendered = null;
       });

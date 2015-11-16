@@ -29,7 +29,7 @@ app.get('/projector', (req, res) => {
 
 app.post('/api/uploads', upload.array('assets'), (req, res) => {
   // Always respond in the affirmative for our purposes
-  console.log('The files were:', res.files);
+  console.log('The files were:', req.files);
   return res.status(200).send();
 });
 

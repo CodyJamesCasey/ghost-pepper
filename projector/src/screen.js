@@ -1,28 +1,47 @@
-import { EVENT_IMAGE_UPDATED, EVENT_SCREEN_SIZE_CHANGED } from './constants';
+const WINDOW_RESIZE_NOTIFICATION_THRESHOLD = 250;
 
 let img;
 let canvas;
 let context;
 
+let eventHandler;
+let lastUpdated = 0;
+
+window.onresize = () => {
+  if (eventHandler && ((new Date()).getTime() - lastUpdated > WINDOW_RESIZE_NOTIFICATION_THRESHOLD)) {
+    lastUpdated = (new Date()).getTime();
+    eventHandler(window.innerWidth, window.innerHeight);
+  }
+};
+
 export function create(socket) {
-  let width = window.innerWidth;
-  let height = window.innerHeight;
-  // Send over the current constraints
-  socket.emit(EVENT_SCREEN_SIZE_CHANGED, { width, height });
   // Create the canvas first
   canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
   document.body.appendChild(canvas);
   // Create the canvas context next
   context = canvas.getContext('2d');
   // Create the image last
   img = new Image();
   img.onload = () => context.drawImage(img, 0, 0);
-  // Start listening to incoming socket events
-  socket.on(EVENT_IMAGE_UPDATED, imgDataUrl => paint(imgDataUrl));
 }
 
-function paint(dataUrl) {
+export function paint(dataUrl) {
   img.src(dataUrl);
+}
+
+export function clear() {
+  // TODO (Sandile): clear the screen
+}
+
+export function bind(newEventHandler) {
+  eventHandler = newEventHandler;
+  // Trigger initial event
+  eventHandler(window.innerWidth, window.innerHeight);
+  lastUpdated = (new Date()).getTime();
+}
+
+export function unbind() {
+  eventHandler = null;
 }

@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import IconButton from 'material-ui/lib/icon-button';
 import RefreshIndicator from 'material-ui/lib/refresh-indicator';
 
+import ModelLoader from './model-loader';
+
 // Load component styles
 require('./main.scss');
 
@@ -32,6 +34,16 @@ export default class MainPage extends React.Component {
     );
   }
 
+  renderModelLoader = () => {
+    let modelLoader;
+    if (this.props.socketLive && this.props.tunnelLive) {
+      modelLoader = (
+        <ModelLoader/>
+      );
+    }
+    return modelLoader;
+  }
+
   render() {
     return (
       <div className="main-page">
@@ -47,6 +59,7 @@ export default class MainPage extends React.Component {
         </div>
         <div className="main-page__content">
           {this.renderLoading()}
+          {this.renderModelLoader()}
         </div>
         <div className="main-page__footer">
           <div className="main-page__footer-content">

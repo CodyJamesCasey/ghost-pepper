@@ -25,7 +25,7 @@ export function updateModelRotationVector(payload) {
   };
 }
 
-export function updateModelRotationVector(payload) {
+export function updateTargetResolution(payload) {
   return {
     type:   actions.UPDATE_TARGET_RESOLUTION,
     width:  payload.width,

@@ -6,7 +6,7 @@ var SRC_PATH    = path.join(__dirname, 'src');
 var BUILD_PATH  = path.join(__dirname, '..', 'dist');
 var HTML_OPTS   = {
   filename: 'client.html',
-  title:    'Ghost Pepper Projector'
+  title:    'Ghost Pepper Client'
 };
 
 module.exports = {
