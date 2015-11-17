@@ -2,6 +2,9 @@ import React from 'react';
 import { post } from 'superagent';
 import Dropzone from 'react-dropzone';
 import CircularProgress from 'material-ui/lib/circular-progress';
+
+import { dispatch } from 'flux/store';
+import { updateRenderModel } from 'flux/action-creators';
 import { OBJLoader, OBJMTLLoader } from 'loaders';
 
 const REGEX_OBJ = /^.+\.obj$/i;
@@ -93,8 +96,13 @@ export default class ModelLoader extends React.Component {
   }
 
   onModelLoaded = (model) => {
-    // TODO (Sandile): hook up redux to function appropriately
-    alert('the model loaded! yey!');
+    this.setState({
+      composingModelObject:      false,
+      modelCompositionProgress:  0,
+      compositionError:          null
+    });
+    // Update the store to keep everything up to date
+    dispatch(updateRenderModel(model));
   }
 
   onModelLoadingFailed = (err) => {
@@ -103,13 +111,14 @@ export default class ModelLoader extends React.Component {
     if (err && err.toString && err.toString()) {
       errorText = err.toString;
     } else {
-      errorText = `Model file upload failed.
-      Please check your network connection.`;
+      errorText = `Model files could not be processed.
+      Please ensure that your models are formatted correctly.`;
     }
     // Update the state accordingly
     this.setState({
-      uploadingModelFiles:  false,
-      uploadError:          errorText
+      composingModelObject:      false,
+      modelCompositionProgress:  0,
+      compositionError:          errorText
     });
   }
 
