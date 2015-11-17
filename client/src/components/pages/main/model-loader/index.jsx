@@ -7,6 +7,7 @@ import { OBJLoader, OBJMTLLoader } from 'loaders';
 const REGEX_OBJ = /^.+\.obj$/i;
 const REGEX_MTX = /^.+\.mtl$/i;
 
+// Load component styles
 require('./model-loader.scss');
 
 export default class ModelLoader extends React.Component {
