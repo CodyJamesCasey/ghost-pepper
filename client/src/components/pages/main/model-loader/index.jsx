@@ -2,7 +2,7 @@ import React from 'react';
 import { post } from 'superagent';
 import Dropzone from 'react-dropzone';
 import CircularProgress from 'material-ui/lib/circular-progress';
-import { OBJLoader, OBJMTLLoader } from 'three.js';
+import { OBJLoader, OBJMTLLoader } from 'loaders';
 
 const REGEX_OBJ = /^.+\.obj$/i;
 const REGEX_MTX = /^.+\.mtl$/i;
@@ -49,10 +49,10 @@ export default class ModelLoader extends React.Component {
         let objUrl = null, mtlUrl = null;
         // Loop through the urls looking for .obj and .mtl
         urls.forEach(url => {
-          if (!objUrl && REGEX_OBJ.test(url)) {
-            objUrl = url;
-          } else if (!mtlUrl && REGEX_MTX.test(url)) {
-            mtlUrl = url;
+          if (!objUrl && REGEX_OBJ.test(url.fileName)) {
+            objUrl = url.path;
+          } else if (!mtlUrl && REGEX_MTX.test(url.fileName)) {
+            mtlUrl = url.path;
           }
         });
         // Use loader conditionally depending on which urls exist
@@ -61,7 +61,8 @@ export default class ModelLoader extends React.Component {
           this.setState({ modelCompositionProgress: 0 });
           // Figure out which loader to use
           if (mtlUrl) {
-            OBJMTLLoader(
+            let loader = new OBJMTLLoader();
+            loader.load(
               objUrl,
               mtlUrl,
               this.onModelLoaded,
@@ -69,7 +70,8 @@ export default class ModelLoader extends React.Component {
               this.onModelLoadingFailed
             );
           } else {
-            OBJLoader(
+            let loader = new OBJLoader();
+            loader.load(
               objUrl,
               this.onModelLoaded,
               this.onModelLoadingProgressed,
@@ -82,16 +84,16 @@ export default class ModelLoader extends React.Component {
   }
 
   onModelLoadingProgressed = (xhr) => {
-    let { progress, total } = xhr;
+    let { loaded, total } = xhr;
     // Get the progress variables from the xhr; update state with them
     this.setState({
-      loadingProgress: (((progress || 0) / (total || 1)) * 100)
+      modelCompositionProgress: (((loaded || 0) / (total || 1)) * 100)
     });
   }
 
   onModelLoaded = (model) => {
     // TODO (Sandile): hook up redux to function appropriately
-    window.alert('the model loaded');
+    alert('the model loaded! yey!');
   }
 
   onModelLoadingFailed = (err) => {

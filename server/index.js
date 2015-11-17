@@ -29,9 +29,14 @@ app.get('/projector', (req, res) => {
 });
 
 app.post('/api/uploads', upload.array('assets'), (req, res) => {
+  let files = req.files || [];
+  // Map incoming files to their original names & absolute paths
+  let result = files.map(file => ({
+    fileName: file.originalname,
+    path: ('/uploads/' + file.filename)
+  }));
   // Always respond in the affirmative for our purposes
-  console.log('The files were:', req.files);
-  return res.status(200).send();
+  return res.status(200).json(result);
 });
 
 socket.on('connection', hub.handleSocketConnection);
