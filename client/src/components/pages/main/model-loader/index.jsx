@@ -96,11 +96,6 @@ export default class ModelLoader extends React.Component {
   }
 
   onModelLoaded = (model) => {
-    this.setState({
-      composingModelObject:      false,
-      modelCompositionProgress:  0,
-      compositionError:          null
-    });
     // Update the store to keep everything up to date
     dispatch(updateRenderModel(model));
   }

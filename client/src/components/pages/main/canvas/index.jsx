@@ -4,17 +4,31 @@ import { connect } from 'react-redux';
 // Load component styles
 require('./canvas.scss');
 
-@connect(state => ({
-  model:  state.currentModel,
-  width:  state.targetResolution.width,
-  height: state.targetResolution.height,
-  thetaX: state.rotationVector.x,
-  thetaY: state.rotationVector.y,
-  thetaZ: state.rotationVector.z
-}))
 export default class Canvas extends React.Component {
+  static propTypes = {
+    // The model to be rendered
+    model:  React.PropTypes.any.isRequired,
+    // The desired width of the viewport
+    width:  React.PropTypes.number.isRequired,
+    // The desired height of the viewport
+    height: React.PropTypes.number.isRequired,
+    // The rotation vector (each dimension is in radians)
+    thetaX: React.PropTypes.number.isRequired,
+    thetaY: React.PropTypes.number.isRequired,
+    thetaZ: React.PropTypes.number.isRequired,
+  }
+
   // The DOM element for the canvas
   canvas = null
+
+  props = {
+    model:  null,
+    width:  0,
+    height: 0,
+    thetaX: 0,
+    thetaY: 0,
+    thetaZ: 0
+  }
 
   componentWillReceiveProps = (nextProps) => {
     let currProps = this.props;
@@ -37,8 +51,8 @@ export default class Canvas extends React.Component {
     // TODO (Sandile): real rendering logic here
     return (
       <div className="canvas">
-        <canvas ref="canvas"/>
-      <div>
+        <canvas ref="canvas" />
+      </div>
     );
   }
 }

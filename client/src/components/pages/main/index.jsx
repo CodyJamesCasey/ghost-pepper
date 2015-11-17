@@ -3,12 +3,19 @@ import { connect } from 'react-redux';
 import IconButton from 'material-ui/lib/icon-button';
 import RefreshIndicator from 'material-ui/lib/refresh-indicator';
 
+import Canvas from './canvas';
 import ModelLoader from './model-loader';
 
 // Load component styles
 require('./main.scss');
 
 @connect(state => ({
+  model:      state.currentModel,
+  width:      state.targetResolution.width,
+  height:     state.targetResolution.height,
+  thetaX:     state.rotationVector.x,
+  thetaY:     state.rotationVector.y,
+  thetaZ:     state.rotationVector.z,
   socketLive: state.socketLive,
   tunnelLive: state.tunnelLive
 }))
@@ -35,13 +42,29 @@ export default class MainPage extends React.Component {
   }
 
   renderModelLoader = () => {
-    let modelLoader;
-    if (this.props.socketLive && this.props.tunnelLive) {
+    let modelLoader = null;
+    if (this.props.socketLive && this.props.tunnelLive && !(this.props.model)) {
       modelLoader = (
         <ModelLoader/>
       );
     }
     return modelLoader;
+  }
+
+  renderCanvas = () => {
+    let canvas = null;
+    if (this.props.socketLive && this.props.tunnelLive && this.props.model) {
+      canvas = (
+        <Canvas
+          model={this.props.model}
+          width={this.props.width}
+          height={this.props.height}
+          thetaX={this.props.thetaX}
+          thetaY={this.props.thetaY}
+          thetaZ={this.props.thetaZ} />
+      );
+    }
+    return canvas;
   }
 
   render() {
@@ -60,6 +83,7 @@ export default class MainPage extends React.Component {
         <div className="main-page__content">
           {this.renderLoading()}
           {this.renderModelLoader()}
+          {this.renderCanvas()}
         </div>
         <div className="main-page__footer">
           <div className="main-page__footer-content">
