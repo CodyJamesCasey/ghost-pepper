@@ -16,7 +16,7 @@ export default class ModelLoader extends React.Component {
     // True if 3.js is turning the model files into a in-memory model objects
     composingModelObject:     false,
     // Tracks how far we've gotten during model composition
-    modelCompositionProgress: 0
+    modelCompositionProgress: 0,
     // Truthy if we bumped into any file uploading errors
     uploadError:              null,
     // Truthy if we had problems while composing the model object
@@ -104,7 +104,7 @@ export default class ModelLoader extends React.Component {
       Please check your network connection.`;
     }
     // Update the state accordingly
-    this.setState({6
+    this.setState({
       uploadingModelFiles:  false,
       uploadError:          errorText
     });

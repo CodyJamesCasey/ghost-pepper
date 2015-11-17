@@ -15,6 +15,7 @@ let socket      = io(server);
 let upload      = multer({ dest: path.join(__dirname, '..', 'uploads') });
 let peerServer  = peer.ExpressPeerServer(server, { debug: true });
 
+app.use('/static', express.static(path.join(__dirname, '..', 'client', 'assets')));
 app.use('/static', express.static(path.join(__dirname, '..', 'dist')));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use('/api/peer', peerServer);
