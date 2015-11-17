@@ -7,6 +7,7 @@ const INITIAL_STATE = {
   socketError:      null,
   tunnelLive:       false,
   tunnelError:      null,
+  currentModel:     null,
   rotationVector:   {
     x: 0,
     y: 0,
@@ -19,6 +20,9 @@ const INITIAL_STATE = {
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
+  // Create variables
+  let clonedState;
+  // Handle every different kind of action
   switch (action.type) {
   case actions.UPDATE_SOCKET_STATUS:
     return assign({}, state, {
@@ -45,6 +49,12 @@ export default function reducer(state = INITIAL_STATE, action) {
         height: action.height
       }
     });
+  case actions.UPDATE_RENDER_MODEL:
+    let clonedState = assign({}, state);
+    // Update the model
+    clonedState.currentModel = action.model;
+    // Update state with new model
+    return clonedState;
   default:
     return state;
   }

@@ -32,3 +32,10 @@ export function updateTargetResolution(payload) {
     height: payload.height
   };
 }
+
+export function updateRenderModel(model) {
+  return {
+    type:   actions.UPDATE_RENDER_MODEL,
+    model:  model
+  };
+}
