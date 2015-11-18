@@ -70,9 +70,9 @@ export default class Canvas extends React.Component {
   viewports           = [
     // Front
     {
-      left:       0,
+      left:       0.25,
       bottom:     0,
-      width:      1.0,
+      width:      0.5,
       height:     0.5,
       background: (new Color()).setRGB(255, 0, 0),
       eye:        [ 0, 10, 50 ],
@@ -82,9 +82,9 @@ export default class Canvas extends React.Component {
     },
     // Right
     {
-      left:       0.5,
+      left:       0.75,
       bottom:     0,
-      width:      0.5,
+      width:      0.25,
       height:     1.0,
       background: (new Color()).setRGB(0, 255, 0),
       eye:        [ 0, 100, 0 ],
@@ -94,7 +94,7 @@ export default class Canvas extends React.Component {
     },
     // Back
     {
-      left:       0,
+      left:       0.25,
       bottom:     0.5,
       width:      1.0,
       height:     0.5,
@@ -108,7 +108,7 @@ export default class Canvas extends React.Component {
     {
       left:       0,
       bottom:     0,
-      width:      0.5,
+      width:      0.25,
       height:     1.0,
       background: (new Color()).setRGB(0, 0, 0),
       eye:        [ 0, 100, 0 ],
@@ -158,38 +158,44 @@ export default class Canvas extends React.Component {
   onPaint = () => {
     // Only do anything if initialized
     if (this.readyToPaint) {
-      let { width, height } = this.props;
+      // Calculate canvas dimensions
+      let renderCanvasWidth   = 2 * this.props.width;
+      let renderCanvasHeight  = this.props.height;
       // First, check to see if we need to resize
-      if (this.rendererDimensions.width !== width ||
-        this.rendererDimensions.height !== height) {
+      let rendererDimensions = this.rendererDimensions;
+      if (rendererDimensions.width !== renderCanvasWidth ||
+        rendererDimensions.height !== renderCanvasHeight) {
         // Tell the render to fix itself
-        this.renderer.setSize(width, height);
+        this.renderer.setSize(renderCanvasWidth, renderCanvasHeight);
         // Update cameras
         let viewport, camera;
         for (let i = 0; i < 1; i++) {
           viewport = this.viewports[i];
           camera = viewport.camera;
-          camera.aspect = (width * viewport.width) / (height * viewportHeight);
+          camera.aspect = (
+            (renderCanvasWidth * viewport.width) /
+            (renderCanvasHeight * viewportHeight)
+          );
           // Update the projection matrix
           camera.updateProjectionMatrix();
         }
         // Update the dimensions object
-        this.rendererDimensions.width  = width;
-        this.rendererDimensions.height = height;
-        // Update the canvas position
-        this.repositionCanvas();
+        rendererDimensions.width  = renderCanvasWidth;
+        rendererDimensions.height = renderCanvasHeight;
+        // Update the render canvas position
+        this.repositionRenderCanvas();
       }
       // Rotate the scene according to the rotation vector
-      // TODO (Sandile): rotate the model according to rotation matrix
+      // TODO (Sandile): rotate the model according to given rotation vector
       // Render each viewport
       let renderer = this.renderer;
       let viewport, left, bottom, viewportWidth, viewportHeight;
       for (let i = 0; i < 1; i++) {
         viewport        = this.viewports[i];
-        left            = Math.floor(viewport.left    * width);
-        bottom          = Math.floor(viewport.bottom  * height);
-        viewportWidth   = Math.floor(viewport.width   * width);
-        viewportHeight  = Math.floor(viewport.height  * height);
+        left            = Math.floor(viewport.left    * renderCanvasWidth);
+        bottom          = Math.floor(viewport.bottom  * renderCanvasHeight);
+        viewportWidth   = Math.floor(viewport.width   * renderCanvasWidth);
+        viewportHeight  = Math.floor(viewport.height  * renderCanvasHeight);
         // Configure the renderer
         renderer.setViewport(left, bottom, viewportWidth, viewportHeight);
         renderer.setScissor(left, bottom, viewportWidth, viewportHeight);
@@ -201,6 +207,7 @@ export default class Canvas extends React.Component {
     }
     // Resume the paint loop
     this.frameAnimationRef = requestAnimationFrame(this.onPaint);
+    // TODO (Sandile): persist to the display canvas
   }
 
   /**************************** HELPER FUNCTIONS *****************************/
@@ -209,13 +216,20 @@ export default class Canvas extends React.Component {
    * Sets up all the WebGL variables needed for painting.
    */
   initWebGL = () => {
-    // Calculate the aspect ratio
-    let aspectRatio = this.props.width / this.props.height;
+    // Calculate canvas dimensions
+    let renderCanvasWidth   = 2 * this.props.width;
+    let renderCanvasHeight  = this.props.height;
     // Create a camera for each viewport
-    this.viewports.forEach(viewport => {
-      let camera = new PerspectiveCamera(
+    let viewports = this.viewports;
+    let viewport, camera;
+    for (let i = 0; i < viewports.length; i++) {
+      viewport  = viewports[i];
+      camera    = new PerspectiveCamera(
         viewport.fov,
-        (this.props.width * viewport.width) / (this.props.height * viewport.height),
+        (
+          (renderCanvasWidth * viewport.width) /
+          (renderCanvasHeight * viewport.height)
+        ),
         1,
         10000
       );
@@ -227,11 +241,9 @@ export default class Canvas extends React.Component {
       camera.up.x = viewport.up[0];
       camera.up.y = viewport.up[1];
       camera.up.z = viewport.up[2];
-      // Update the projection matrix
-      camera.updateProjectionMatrix();
       // Attach the camera to the view port
       viewport.camera = camera;
-    });
+    }
     // Create the scene
     let scene = new Scene();
     // Let there be light
@@ -241,20 +253,16 @@ export default class Canvas extends React.Component {
     scene.add(spotlight);
     // Add the model to the scene
     scene.add(this.props.model);
-    console.log('model', this.props.model);
     // Init the renderer
     let renderer = new WebGLRenderer();
     let rendererDimensions = {
-      width:  this.props.width,
-      height: this.props.height
+      width:  renderCanvasWidth,
+      height: renderCanvasHeight
     };
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(rendererDimensions.width, rendererDimensions.height);
+    renderer.setSize(renderCanvasWidth, rendererDimensionsHeight);
     // Add the renderer dom element to the canvas container
-    if (this.refs.container.firstChild) {
-      // Remove the existing children
-      this.refs.container.removeChild(this.refs.container.firstChild);
-    }
+    renderer.domElement.className = 'canvas-container__render-canvas';
     this.refs.container.appendChild(renderer.domElement);
     // Update instance vars
     this.scene = scene;
@@ -263,25 +271,28 @@ export default class Canvas extends React.Component {
     // We are now ready to paint
     this.readyToPaint = true;
     // Perform initial positioning
-    this.repositionCanvas();
+    this.repositionRenderCanvas();
+    // TODO (Sandile): Create the display canvas
   }
 
   /**
    * Centers the canvas in the canvas container.
    * @param  {object} nextProps the most up to date properties map
    */
-  repositionCanvas = (nextProps) => {
+  repositionRenderCanvas = (nextProps) => {
     // Only do anything if initialized
     if (this.readyToPaint) {
       let props = nextProps || this.props;
       // Variables
-      let canvas    = this.renderer.domElement;
-      let container = this.refs.container;
+      let renderCanvas  = this.renderer.domElement;
+      let container     = this.refs.container;
       // Calculate the aspect ratio of the canvas when compared to the container
-      let containerWidth  = container.clientWidth;
-      let containerHeight = container.clientHeight;
-      let widthRatio      = containerWidth / props.width;
-      let heightRatio     = containerHeight / props.height;
+      let containerWidth      = container.clientWidth;
+      let containerHeight     = container.clientHeight;
+      let renderCanvasWidth   = props.width * 2;
+      let renderCanvasHeight  = props.height;
+      let widthRatio          = containerWidth / renderCanvasWidth;
+      let heightRatio         = containerHeight / renderCanvasHeight;
       // Figure out if we have to scale down the canvas
       let scale = 1;
       if (widthRatio < 1) {
@@ -290,12 +301,12 @@ export default class Canvas extends React.Component {
       if (heightRatio < scale) {
         scale = heightRatio;
       }
-      let scaledWidth   = props.width * scale;
-      let scaledHeight  = props.height * scale;
+      let scaledRenderCanvasWidth   = renderCanvasWidth * scale;
+      let scaledRenderCanvasHeight  = renderCanvasWidth * scale;
       // Detect translation
-      let translationX  = (containerWidth - scaledWidth) / 2;
-      let translationY  = (containerHeight - scaledHeight) / 2;
-      // Calculate the transform
+      let translationX  = (containerWidth - scaledRenderCanvasWidth) / 2;
+      let translationY  = (containerHeight - scaledRenderCanvasHeight) / 2;
+      // Assemble the transform
       let transform = [];
       if (translationX > 0) {
         transform.push('translateX(');
