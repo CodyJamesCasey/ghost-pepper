@@ -77,6 +77,7 @@ export default class Canvas extends React.Component {
       background: (new Color()).setRGB(255, 0, 0),
       eye:        [ 0, 10, 50 ],
       up:         [ 0, 1, 0 ],
+      rotation:   [ 0, 0, 0 ],
       fov:        45,
       camera:     null
     },
@@ -88,7 +89,8 @@ export default class Canvas extends React.Component {
       height:     1.0,
       background: (new Color()).setRGB(0, 255, 0),
       eye:        [ 0, 10, 50 ],
-      up:         [ 0, 0, 1 ],
+      up:         [ 0, 1, 0 ],
+      rotation:   [ 0, 0, -1 * (Math.PI / 2) ],
       fov:        45,
       camera:     null
     },
@@ -101,6 +103,7 @@ export default class Canvas extends React.Component {
       background: (new Color()).setRGB(0, 0, 255),
       eye:        [ 0, 10, 50 ],
       up:         [ 0, 1, 0 ],
+      rotation:   [ 0, 0, -1 * Math.PI ],
       fov:        45,
       camera:     null
     },
@@ -112,7 +115,8 @@ export default class Canvas extends React.Component {
       height:     1.0,
       background: (new Color()).setRGB(0, 0, 0),
       eye:        [ 0, 10, 50 ],
-      up:         [ 0, 0, 1 ],
+      up:         [ 0, 1, 0 ],
+      rotation:   [ 0, 0, Math.PI / 2 ],
       fov:        45,
       camera:     null
     }
@@ -243,7 +247,14 @@ export default class Canvas extends React.Component {
       camera.up.x = viewport.up[0];
       camera.up.y = viewport.up[1];
       camera.up.z = viewport.up[2];
-      // Attach the camera to the view port
+      // Set the camera rotation up
+      camera.rotation.set(
+        viewport.rotation[0],
+        viewport.rotation[1],
+        viewport.rotation[2],
+        'XYZ'
+      );
+      // Attach the camera to the viewport
       viewport.camera = camera;
     }
     // Create the scene
