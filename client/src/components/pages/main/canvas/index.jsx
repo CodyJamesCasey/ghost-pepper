@@ -87,8 +87,8 @@ export default class Canvas extends React.Component {
       width:      0.25,
       height:     1.0,
       background: (new Color()).setRGB(0, 255, 0),
-      eye:        [ 0, 100, 0 ],
-      up:         [ 0, 1, 0 ],
+      eye:        [ 0, 10, 50 ],
+      up:         [ 0, 0, 1 ],
       fov:        45,
       camera:     null
     },
@@ -96,10 +96,10 @@ export default class Canvas extends React.Component {
     {
       left:       0.25,
       bottom:     0.5,
-      width:      1.0,
+      width:      0.5,
       height:     0.5,
       background: (new Color()).setRGB(0, 0, 255),
-      eye:        [ 0, 100, 0 ],
+      eye:        [ 0, 10, 50 ],
       up:         [ 0, 1, 0 ],
       fov:        45,
       camera:     null
@@ -111,8 +111,8 @@ export default class Canvas extends React.Component {
       width:      0.25,
       height:     1.0,
       background: (new Color()).setRGB(0, 0, 0),
-      eye:        [ 0, 100, 0 ],
-      up:         [ 0, 1, 0 ],
+      eye:        [ 0, 10, 50 ],
+      up:         [ 0, 0, 1 ],
       fov:        45,
       camera:     null
     }
@@ -150,7 +150,7 @@ export default class Canvas extends React.Component {
     if (this.windowResizeTimeoutRef) clearTimeout(this.windowResizeTimeoutRef);
     // Schedule another resize
     this.windowResizeTimeoutRef = setTimeout(
-      this.repositionCanvas.bind(this, null),
+      this.repositionRenderCanvas.bind(this, null),
       WINDOW_RESIZE_WAIT_PERIOD
     );
   }
@@ -188,10 +188,11 @@ export default class Canvas extends React.Component {
       // Rotate the scene according to the rotation vector
       // TODO (Sandile): rotate the model according to given rotation vector
       // Render each viewport
-      let renderer = this.renderer;
+      let renderer  = this.renderer;
+      let viewports = this.viewports;
       let viewport, left, bottom, viewportWidth, viewportHeight;
-      for (let i = 0; i < 1; i++) {
-        viewport        = this.viewports[i];
+      for (let i = 0; i < viewports.length; i++) {
+        viewport        = viewports[i];
         left            = Math.floor(viewport.left    * renderCanvasWidth);
         bottom          = Math.floor(viewport.bottom  * renderCanvasHeight);
         viewportWidth   = Math.floor(viewport.width   * renderCanvasWidth);
@@ -203,6 +204,7 @@ export default class Canvas extends React.Component {
         renderer.setClearColor(viewport.background);
         // F-f-f-f-fire yur layzar!!!
         renderer.render(this.scene, viewport.camera);
+        renderer.enableScissorTest(false);
       }
     }
     // Resume the paint loop
@@ -260,7 +262,7 @@ export default class Canvas extends React.Component {
       height: renderCanvasHeight
     };
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(renderCanvasWidth, rendererDimensionsHeight);
+    renderer.setSize(renderCanvasWidth, renderCanvasHeight);
     // Add the renderer dom element to the canvas container
     renderer.domElement.className = 'canvas-container__render-canvas';
     this.refs.container.appendChild(renderer.domElement);
@@ -273,6 +275,8 @@ export default class Canvas extends React.Component {
     // Perform initial positioning
     this.repositionRenderCanvas();
     // TODO (Sandile): Create the display canvas
+    console.log('renderer:', renderCanvasWidth, 'x', renderCanvasHeight);
+    console.log('canvas:', this.props.width, 'x', this.props.height);
   }
 
   /**
@@ -302,10 +306,11 @@ export default class Canvas extends React.Component {
         scale = heightRatio;
       }
       let scaledRenderCanvasWidth   = renderCanvasWidth * scale;
-      let scaledRenderCanvasHeight  = renderCanvasWidth * scale;
+      let scaledRenderCanvasHeight  = renderCanvasHeight * scale;
       // Detect translation
       let translationX  = (containerWidth - scaledRenderCanvasWidth) / 2;
       let translationY  = (containerHeight - scaledRenderCanvasHeight) / 2;
+      console.log('translationY', translationY);
       // Assemble the transform
       let transform = [];
       if (translationX > 0) {
@@ -324,7 +329,7 @@ export default class Canvas extends React.Component {
         transform.push(')');
       }
       // Apply the transform to canvas
-      canvas.style.transform = transform.join('');
+      renderCanvas.style.transform = transform.join('');
     }
   }
 
