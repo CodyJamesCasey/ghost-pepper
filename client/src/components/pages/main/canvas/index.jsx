@@ -102,18 +102,18 @@ export default class Canvas extends React.Component {
     let props = nextProps || this.props;
     // Variables
     let canvas  = this.refs.canvas;
-    let ctx     = canvas.getContext();
+    let ctx     = canvas.getContext('2d');
     // Resize the canvas
     this.refs.canvas.width  = props.width;
     this.refs.canvas.height = props.height;
     // Clear the canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
   repositionCanvas = (nextProps) => {
     let props = nextProps || this.props;
     // Variables
-    let canvas    = this.refs.container;
+    let canvas    = this.refs.canvas;
     let container = this.refs.container;
     // Calculate the aspect ratio of the canvas when compared to the container
     let containerWidth  = container.clientWidth;
@@ -138,12 +138,12 @@ export default class Canvas extends React.Component {
     if (translationX > 0) {
       transform.push('translateX(');
       transform.push(translationX.toString());
-      transform.push(') ');
+      transform.push('px) ');
     }
     if (translationY > 0) {
       transform.push('translateY(');
       transform.push(translationY.toString());
-      transform.push(') ');
+      transform.push('px) ');
     }
     if (scale !== 1) {
       transform.push('scale(');
