@@ -82,6 +82,15 @@ export default class ModelLoader extends React.Component {
               this.onModelLoadingFailed
             );
           }
+        } else {
+          // Means that none of the uploaded stuff is what we're looking for
+          let errorText = `Uploaded files must contain at least a .obj file.`;
+          // Update the state accordingly
+          this.setState({
+            composingModelObject:      false,
+            modelCompositionProgress:  0,
+            compositionError:          errorText
+          });
         }
       }
     });
