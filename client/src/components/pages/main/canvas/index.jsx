@@ -74,8 +74,8 @@ export default class Canvas extends React.Component {
       bottom:     0,
       width:      1.0,
       height:     0.5,
-      background: (new Color()).setRGB(0, 0, 0),
-      eye:        [ 0, 300, 1800 ],
+      background: (new Color()).setRGB(255, 0, 0),
+      eye:        [ 0, 10, 50 ],
       up:         [ 0, 1, 0 ],
       fov:        45,
       camera:     null
@@ -86,8 +86,8 @@ export default class Canvas extends React.Component {
       bottom:     0,
       width:      0.5,
       height:     1.0,
-      background: (new Color()).setRGB(0, 0, 0),
-      eye:        [ 0, 1800, 0 ],
+      background: (new Color()).setRGB(0, 255, 0),
+      eye:        [ 0, 100, 0 ],
       up:         [ 0, 1, 0 ],
       fov:        45,
       camera:     null
@@ -98,8 +98,8 @@ export default class Canvas extends React.Component {
       bottom:     0.5,
       width:      1.0,
       height:     0.5,
-      background: (new Color()).setRGB(0, 0, 0),
-      eye:        [ 0, 1800, 0 ],
+      background: (new Color()).setRGB(0, 0, 255),
+      eye:        [ 0, 100, 0 ],
       up:         [ 0, 1, 0 ],
       fov:        45,
       camera:     null
@@ -111,7 +111,7 @@ export default class Canvas extends React.Component {
       width:      0.5,
       height:     1.0,
       background: (new Color()).setRGB(0, 0, 0),
-      eye:        [ 0, 1800, 0 ],
+      eye:        [ 0, 100, 0 ],
       up:         [ 0, 1, 0 ],
       fov:        45,
       camera:     null
@@ -163,18 +163,19 @@ export default class Canvas extends React.Component {
       if (this.rendererDimensions.width !== width ||
         this.rendererDimensions.height !== height) {
         // Tell the render to fix itself
-        renderer.setSize(width, height);
+        this.renderer.setSize(width, height);
+        // Update cameras
+        let viewport, camera;
+        for (let i = 0; i < 1; i++) {
+          viewport = this.viewports[i];
+          camera = viewport.camera;
+          camera.aspect = (width * viewport.width) / (height * viewportHeight);
+          // Update the projection matrix
+          camera.updateProjectionMatrix();
+        }
         // Update the dimensions object
         this.rendererDimensions.width  = width;
         this.rendererDimensions.height = height;
-        // Update all the viewport cameras
-        let camera;
-        let aspectRatio = width / height;
-        for (let i = 0; i < 4; i++) {
-          camera = this.viewports[i].camera;
-          camera.aspect = aspectRatio;
-          camera.updateProjectionMatrix();
-        }
         // Update the canvas position
         this.repositionCanvas();
       }
@@ -183,7 +184,7 @@ export default class Canvas extends React.Component {
       // Render each viewport
       let renderer = this.renderer;
       let viewport, left, bottom, viewportWidth, viewportHeight;
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 1; i++) {
         viewport        = this.viewports[i];
         left            = Math.floor(viewport.left    * width);
         bottom          = Math.floor(viewport.bottom  * height);
@@ -214,7 +215,7 @@ export default class Canvas extends React.Component {
     this.viewports.forEach(viewport => {
       let camera = new PerspectiveCamera(
         viewport.fov,
-        aspectRatio,
+        (this.props.width * viewport.width) / (this.props.height * viewport.height),
         1,
         10000
       );
@@ -226,6 +227,8 @@ export default class Canvas extends React.Component {
       camera.up.x = viewport.up[0];
       camera.up.y = viewport.up[1];
       camera.up.z = viewport.up[2];
+      // Update the projection matrix
+      camera.updateProjectionMatrix();
       // Attach the camera to the view port
       viewport.camera = camera;
     });
@@ -238,6 +241,7 @@ export default class Canvas extends React.Component {
     scene.add(spotlight);
     // Add the model to the scene
     scene.add(this.props.model);
+    console.log('model', this.props.model);
     // Init the renderer
     let renderer = new WebGLRenderer();
     let rendererDimensions = {
