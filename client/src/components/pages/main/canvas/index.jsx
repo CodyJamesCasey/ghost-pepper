@@ -181,7 +181,7 @@ export default class Canvas extends React.Component {
     if (this.windowResizeTimeoutRef) clearTimeout(this.windowResizeTimeoutRef);
     // Schedule another resize
     this.windowResizeTimeoutRef = setTimeout(
-      this.repositionRenderCanvas.bind(this, null),
+      this.repositionDisplayCanvas.bind(this, null),
       WINDOW_RESIZE_WAIT_PERIOD
     );
   }
@@ -213,8 +213,6 @@ export default class Canvas extends React.Component {
         // Update the dimensions object
         rendererDimensions.width  = renderCanvasWidth;
         rendererDimensions.height = renderCanvasHeight;
-        // Update the render canvas position
-        this.repositionRenderCanvas();
       }
       // Rotate the scene according to the rotation vector
       // TODO (Sandile): rotate the model according to given rotation vector
@@ -249,12 +247,13 @@ export default class Canvas extends React.Component {
     if (this.displayCanvasCreated) {
       // Localize instance variables
       let viewports = this.viewports;
+      let pixelDensity = window.devicePixelRatio;
       let displayCanvas = this.displayCanvas;
       let displayCanvasContext = this.displayCanvas.getContext('2d');
       let displayCanvasDimensions = this.displayCanvasDimensions;
       let renderCanvas = this.renderer.domElement;
-      let displayCanvasWidth = this.props.width;
-      let displayCanvasHeight = this.props.height;
+      let displayCanvasWidth = this.props.width * pixelDensity;
+      let displayCanvasHeight = this.props.height * pixelDensity;
       // Detect a resize
       if (displayCanvasWidth !== displayCanvasDimensions.width ||
         displayCanvasHeight !== displayCanvasDimensions.height) {
@@ -264,6 +263,8 @@ export default class Canvas extends React.Component {
         // Update dimensions in memory
         displayCanvasDimensions.width = displayCanvasWidth;
         displayCanvasDimensions.height = displayCanvasHeight;
+        // Update the display canvas position
+        this.repositionDisplayCanvas();
       }
       // Reset the canvas for the new round of blitting
       displayCanvasContext.clearRect(
@@ -452,19 +453,17 @@ export default class Canvas extends React.Component {
     this.renderer = renderer;
     this.rendererDimensions = rendererDimensions;
     this.renderCanvasCreated = true;
-    // Perform initial positioning
-    this.repositionRenderCanvas();
-    // TODO (Sandile): Create the display canvas
   }
 
   /**
    * Creates the canvas designated for formatting the WebGL output for the projector.
    */
   createDisplayCanvas = () => {
+    let pixelDensity = window.devicePixelRatio;
     let displayCanvas = document.createElement('canvas');
     let displayCanvasDimensions = {
-      width:  this.props.width,
-      height: this.props.height
+      width:  this.props.width * pixelDensity,
+      height: this.props.height * pixelDensity
     };
     displayCanvas.className = 'canvas-container__display-canvas';
     displayCanvas.width = displayCanvasDimensions.width;
@@ -475,26 +474,29 @@ export default class Canvas extends React.Component {
     this.displayCanvas = displayCanvas;
     this.displayCanvasDimensions = displayCanvasDimensions;
     this.displayCanvasCreated = true;
+    // Perform initial positioning
+    this.repositionDisplayCanvas();
   }
 
   /**
    * Centers the canvas in the canvas container.
    * @param  {object} nextProps the most up to date properties map
    */
-  repositionRenderCanvas = (nextProps) => {
+  repositionDisplayCanvas = (nextProps) => {
     // Only do anything if initialized
-    if (this.renderCanvasCreated) {
+    if (this.displayCanvasCreated) {
       let props = nextProps || this.props;
       // Variables
-      let renderCanvas  = this.renderer.domElement;
+      let pixelDensity  = window.devicePixelRatio;
+      let displayCanvas = this.displayCanvas;
       let container     = this.refs.container;
       // Calculate the aspect ratio of the canvas when compared to the container
       let containerWidth      = container.clientWidth;
       let containerHeight     = container.clientHeight;
-      let renderCanvasWidth   = props.width * 2;
-      let renderCanvasHeight  = props.height;
-      let widthRatio          = containerWidth / renderCanvasWidth;
-      let heightRatio         = containerHeight / renderCanvasHeight;
+      let displayCanvasWidth  = props.width * pixelDensity;
+      let displayCanvasHeight = props.height * pixelDensity;
+      let widthRatio          = containerWidth / displayCanvasWidth;
+      let heightRatio         = containerHeight / displayCanvasHeight;
       // Figure out if we have to scale down the canvas
       let scale = 1;
       if (widthRatio < 1) {
@@ -503,11 +505,11 @@ export default class Canvas extends React.Component {
       if (heightRatio < scale) {
         scale = heightRatio;
       }
-      let scaledRenderCanvasWidth   = renderCanvasWidth * scale;
-      let scaledRenderCanvasHeight  = renderCanvasHeight * scale;
+      let scaledDisplayCanvasWidth  = displayCanvasWidth * scale;
+      let scaledDisplayCanvasHeight = displayCanvasHeight * scale;
       // Detect translation
-      let translationX  = (containerWidth - scaledRenderCanvasWidth) / 2;
-      let translationY  = (containerHeight - scaledRenderCanvasHeight) / 2;
+      let translationX  = (containerWidth - scaledDisplayCanvasWidth) / 2;
+      let translationY  = (containerHeight - scaledDisplayCanvasHeight) / 2;
       // Assemble the transform
       let transform = [];
       if (translationX > 0) {
@@ -526,7 +528,7 @@ export default class Canvas extends React.Component {
         transform.push(')');
       }
       // Apply the transform to canvas
-      renderCanvas.style.transform = transform.join('');
+      displayCanvas.style.transform = transform.join('');
     }
   }
 

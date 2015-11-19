@@ -7,11 +7,12 @@
   overflow: hidden;
 
   &__render-canvas {
-    transform-origin: 0 0 0;
+    position: absolute;
+    visibility: hidden;
   }
 
   &__display-canvas {
     position: absolute;
-    visibility: hidden;
+    transform-origin: 0 0 0;
   }
 }
