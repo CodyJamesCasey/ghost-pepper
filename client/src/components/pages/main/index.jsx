@@ -10,14 +10,15 @@ import ModelLoader from './model-loader';
 require('./main.scss');
 
 @connect(state => ({
-  model:      state.currentModel,
-  width:      state.targetResolution.width,
-  height:     state.targetResolution.height,
-  thetaX:     state.rotationVector.x,
-  thetaY:     state.rotationVector.y,
-  thetaZ:     state.rotationVector.z,
-  socketLive: state.socketLive,
-  tunnelLive: state.tunnelLive
+  model:        state.currentModel,
+  boundingBox:  state.currentModelBoundingBox,
+  width:        state.targetResolution.width,
+  height:       state.targetResolution.height,
+  thetaX:       state.rotationVector.x,
+  thetaY:       state.rotationVector.y,
+  thetaZ:       state.rotationVector.z,
+  socketLive:   state.socketLive,
+  tunnelLive:   state.tunnelLive
 }))
 export default class MainPage extends React.Component {
   renderLoading = () => {
@@ -43,7 +44,9 @@ export default class MainPage extends React.Component {
 
   renderModelLoader = () => {
     let modelLoader = null;
-    if (this.props.socketLive && this.props.tunnelLive && !(this.props.model)) {
+    if (this.props.socketLive &&
+      this.props.tunnelLive &&
+      (!this.props.model || !this.props.boundingBox)) {
       modelLoader = (
         <ModelLoader/>
       );
@@ -53,7 +56,10 @@ export default class MainPage extends React.Component {
 
   renderCanvas = () => {
     let canvas = null;
-    if (this.props.socketLive && this.props.tunnelLive && this.props.model) {
+    if (this.props.socketLive &&
+      this.props.tunnelLive &&
+      this.props.model &&
+      this.props.boundingBox) {
       canvas = (
         <Canvas
           model={this.props.model}
@@ -61,7 +67,8 @@ export default class MainPage extends React.Component {
           height={this.props.height}
           thetaX={this.props.thetaX}
           thetaY={this.props.thetaY}
-          thetaZ={this.props.thetaZ} />
+          thetaZ={this.props.thetaZ}
+          boundingBox={this.props.boundingBox} />
       );
     }
     return canvas;

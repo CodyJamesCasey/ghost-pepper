@@ -3,17 +3,18 @@ import assign from 'object-assign';
 import * as actions from './actions';
 
 const INITIAL_STATE = {
-  socketLive:       false,
-  socketError:      null,
-  tunnelLive:       false,
-  tunnelError:      null,
-  currentModel:     null,
-  rotationVector:   {
+  socketLive:               false,
+  socketError:              null,
+  tunnelLive:               false,
+  tunnelError:              null,
+  currentModel:             null,
+  currentModelBoundingBox:  null,
+  rotationVector:           {
     x: 0,
     y: 0,
     z: 0
   },
-  targetResolution: {
+  targetResolution:         {
     width:  900,
     height: 600
   }
@@ -49,10 +50,11 @@ export default function reducer(state = INITIAL_STATE, action) {
         height: action.height
       }
     });
-  case actions.UPDATE_RENDER_MODEL:
+  case actions.UPDATE_3D_MODEL:
     let clonedState = assign({}, state);
     // Update the model
     clonedState.currentModel = action.model;
+    clonedState.currentModelBoundingBox = action.boundingBox;
     // Update state with new model
     return clonedState;
   default:

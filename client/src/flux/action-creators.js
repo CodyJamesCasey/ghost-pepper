@@ -33,9 +33,10 @@ export function updateTargetResolution(payload) {
   };
 }
 
-export function updateRenderModel(model) {
+export function set3DModel(model, boundingBox) {
   return {
-    type:   actions.UPDATE_RENDER_MODEL,
-    model:  model
+    type:         actions.UPDATE_3D_MODEL,
+    model:        model,
+    boundingBox:  boundingBox
   };
 }

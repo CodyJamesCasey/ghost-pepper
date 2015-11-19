@@ -13,6 +13,8 @@ import {
 // actually trigger changes to the DOM? WINDOW_RESIZE_WAIT_PERIOD is how long
 // we wait in milliseconds.
 const WINDOW_RESIZE_WAIT_PERIOD = 200;
+// How wide the field of view of the camera is in radians
+const FIELD_OF_VIEW             = 45;
 
 // Load component styles
 require('./canvas.scss');
@@ -31,15 +33,17 @@ export default class Canvas extends React.Component {
 
   static propTypes = {
     // The model to be rendered
-    model:  React.PropTypes.any.isRequired,
+    model:        React.PropTypes.any.isRequired,
+    // The bounding box of the model
+    boundingBox:  React.PropTypes.any.isRequired,
     // The desired width of the viewport
-    width:  React.PropTypes.number.isRequired,
+    width:        React.PropTypes.number.isRequired,
     // The desired height of the viewport
-    height: React.PropTypes.number.isRequired,
+    height:       React.PropTypes.number.isRequired,
     // The rotation vector (each dimension is in radians)
-    thetaX: React.PropTypes.number.isRequired,
-    thetaY: React.PropTypes.number.isRequired,
-    thetaZ: React.PropTypes.number.isRequired,
+    thetaX:       React.PropTypes.number.isRequired,
+    thetaY:       React.PropTypes.number.isRequired,
+    thetaZ:       React.PropTypes.number.isRequired,
   }
 
   /*************************** INSTANCE VARIABLES ****************************/
@@ -75,10 +79,9 @@ export default class Canvas extends React.Component {
       width:      0.5,
       height:     0.5,
       background: (new Color()).setRGB(255, 0, 0),
-      eye:        [ 0, 10, 50 ],
+      eye:        [ 0, 0, 50 ],
       up:         [ 0, 1, 0 ],
       rotation:   [ 0, 0, 0 ],
-      fov:        45,
       camera:     null
     },
     // Right
@@ -88,10 +91,9 @@ export default class Canvas extends React.Component {
       width:      0.25,
       height:     1.0,
       background: (new Color()).setRGB(0, 255, 0),
-      eye:        [ 0, 10, 50 ],
+      eye:        [ 0, 0, 50 ],
       up:         [ 0, 1, 0 ],
       rotation:   [ 0, 0, -1 * (Math.PI / 2) ],
-      fov:        45,
       camera:     null
     },
     // Back
@@ -101,8 +103,7 @@ export default class Canvas extends React.Component {
       width:      0.5,
       height:     0.5,
       background: (new Color()).setRGB(0, 0, 255),
-      eye:        [ 0, 10, 50 ],
-      up:         [ 0, 1, 0 ],
+      eye:        [ 0, 0, 50 ],
       rotation:   [ 0, 0, -1 * Math.PI ],
       fov:        45,
       camera:     null
@@ -114,8 +115,7 @@ export default class Canvas extends React.Component {
       width:      0.25,
       height:     1.0,
       background: (new Color()).setRGB(0, 0, 0),
-      eye:        [ 0, 10, 50 ],
-      up:         [ 0, 1, 0 ],
+      eye:        [ 0, 0, 50 ],
       rotation:   [ 0, 0, Math.PI / 2 ],
       fov:        45,
       camera:     null
@@ -231,7 +231,7 @@ export default class Canvas extends React.Component {
     for (let i = 0; i < viewports.length; i++) {
       viewport  = viewports[i];
       camera    = new PerspectiveCamera(
-        viewport.fov,
+        FIELD_OF_VIEW,
         (
           (renderCanvasWidth * viewport.width) /
           (renderCanvasHeight * viewport.height)
@@ -244,9 +244,9 @@ export default class Canvas extends React.Component {
       camera.position.y = viewport.eye[1];
       camera.position.z = viewport.eye[2];
       // Set the up vector
-      camera.up.x = viewport.up[0];
-      camera.up.y = viewport.up[1];
-      camera.up.z = viewport.up[2];
+      camera.up.x = 0;
+      camera.up.y = 1;
+      camera.up.z = 0;
       // Set the camera rotation up
       camera.rotation.set(
         viewport.rotation[0],
@@ -286,8 +286,6 @@ export default class Canvas extends React.Component {
     // Perform initial positioning
     this.repositionRenderCanvas();
     // TODO (Sandile): Create the display canvas
-    console.log('renderer:', renderCanvasWidth, 'x', renderCanvasHeight);
-    console.log('canvas:', this.props.width, 'x', this.props.height);
   }
 
   /**
@@ -321,7 +319,6 @@ export default class Canvas extends React.Component {
       // Detect translation
       let translationX  = (containerWidth - scaledRenderCanvasWidth) / 2;
       let translationY  = (containerHeight - scaledRenderCanvasHeight) / 2;
-      console.log('translationY', translationY);
       // Assemble the transform
       let transform = [];
       if (translationX > 0) {

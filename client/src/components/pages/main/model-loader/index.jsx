@@ -1,11 +1,13 @@
 import React from 'react';
 import { post } from 'superagent';
 import Dropzone from 'react-dropzone';
+import { Mesh } from 'three.js';
 import CircularProgress from 'material-ui/lib/circular-progress';
 
 import { dispatch } from 'flux/store';
-import { updateRenderModel } from 'flux/action-creators';
+import { set3DModel } from 'flux/action-creators';
 import { OBJLoader, OBJMTLLoader } from 'loaders';
+import { calculateCenteringVector } from 'util/model';
 
 const REGEX_OBJ = /^.+\.obj$/i;
 const REGEX_MTX = /^.+\.mtl$/i;
@@ -105,8 +107,34 @@ export default class ModelLoader extends React.Component {
   }
 
   onModelLoaded = (model) => {
-    // Update the store to keep everything up to date
-    dispatch(updateRenderModel(model));
+    // True if we end up setting the model correctly
+    let isModelSet = false;
+    // First calculate the bounding box of the model
+    model.traverse(child => {
+      if (!isModelSet && (child instanceof Mesh)) {
+        // Calculate the bounding box
+        child.geometry.computeBoundingBox();
+        // Figure out how far we need to translate in every direction for it
+        // to be centered
+        let centeringVector = calculateCenteringVector(
+          child.geometry.boundingBox
+        );
+        // Apply the translation in every direction
+        if (centeringVector[0]) model.translateX(centeringVector[0]);
+        if (centeringVector[1]) model.translateY(centeringVector[1]);
+        if (centeringVector[2]) model.translateZ(centeringVector[2]);
+        // Update the store now that we have the bounding box
+        dispatch(set3DModel(model, child.geometry.boundingBox));
+        // Declare that the model has been set
+        isModelSet = true;
+      }
+    });
+    // Check if it worked
+    if (!isModelSet) {
+      // TODO (Sandile) handle this case with an error
+      debugger;
+      alert('Uh oh! Can\'t load this thing...sorry.');
+    }
   }
 
   onModelLoadingFailed = (err) => {
