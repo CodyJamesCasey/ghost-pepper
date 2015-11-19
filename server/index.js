@@ -8,6 +8,7 @@ const peer      = require('peer');
 const io        = require('socket.io');
 
 const hub       = require('./hub');
+const janitor   = require('./uploads-janitor');
 
 let app         = express();
 let server      = http.Server(app);
@@ -44,3 +45,6 @@ socket.on('connection', hub.handleSocketConnection);
 server.listen(3000, () => {
   console.log('listening on *:3000');
 });
+
+// Start cleaning up old uploads on a fixed interval
+janitor.start();
