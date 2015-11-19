@@ -3,18 +3,26 @@ import { connect } from 'react-redux';
 import {
   Color,
   Scene,
+  Vector3,
   AmbientLight,
   WebGLRenderer,
   DirectionalLight,
   PerspectiveCamera
 } from 'three.js';
 
+import { calculateCameraDistance } from 'util/model';
+
 // How do we wait for there to me no more window resize events before we
 // actually trigger changes to the DOM? WINDOW_RESIZE_WAIT_PERIOD is how long
 // we wait in milliseconds.
-const WINDOW_RESIZE_WAIT_PERIOD = 200;
-// How wide the field of view of the camera is in radians
-const FIELD_OF_VIEW             = 45;
+const WINDOW_RESIZE_WAIT_PERIOD   = 200;
+// How wide the field of view of the camera is in degrees
+const FIELD_OF_VIEW               = 45;
+// The background color of the canvas
+const BACKGROUND_COLOR            = (new Color()).setRGB(0, 0, 0);
+// What percent space to leave between the viewport boundary and the model
+const VERTICAL_VIEWPORT_PADDING   = 0.1;
+const HORIZONTAL_VIEWPORT_PADDING = 0.15;
 
 // Load component styles
 require('./canvas.scss');
@@ -78,8 +86,7 @@ export default class Canvas extends React.Component {
       bottom:     0,
       width:      0.5,
       height:     0.5,
-      background: (new Color()).setRGB(255, 0, 0),
-      eye:        [ 0, 0, 50 ],
+      eye:        [ 0, 0, 1 ],
       up:         [ 0, 1, 0 ],
       rotation:   [ 0, 0, 0 ],
       camera:     null
@@ -90,10 +97,9 @@ export default class Canvas extends React.Component {
       bottom:     0,
       width:      0.25,
       height:     1.0,
-      background: (new Color()).setRGB(0, 255, 0),
-      eye:        [ 0, 0, 50 ],
+      eye:        [ 1, 0, 0 ],
       up:         [ 0, 1, 0 ],
-      rotation:   [ 0, 0, -1 * (Math.PI / 2) ],
+      rotation:   [ 0, (Math.PI / 2), -1 * (Math.PI / 2) ],
       camera:     null
     },
     // Back
@@ -102,9 +108,8 @@ export default class Canvas extends React.Component {
       bottom:     0.5,
       width:      0.5,
       height:     0.5,
-      background: (new Color()).setRGB(0, 0, 255),
-      eye:        [ 0, 0, 50 ],
-      rotation:   [ 0, 0, -1 * Math.PI ],
+      eye:        [ 0, 0, -1 ],
+      rotation:   [ 0, Math.PI, -1 * Math.PI ],
       fov:        45,
       camera:     null
     },
@@ -114,9 +119,8 @@ export default class Canvas extends React.Component {
       bottom:     0,
       width:      0.25,
       height:     1.0,
-      background: (new Color()).setRGB(0, 0, 0),
-      eye:        [ 0, 0, 50 ],
-      rotation:   [ 0, 0, Math.PI / 2 ],
+      eye:        [ -1, 0, 0 ],
+      rotation:   [ 0, -1 * (Math.PI / 2), Math.PI / 2 ],
       fov:        45,
       camera:     null
     }
@@ -205,7 +209,7 @@ export default class Canvas extends React.Component {
         renderer.setViewport(left, bottom, viewportWidth, viewportHeight);
         renderer.setScissor(left, bottom, viewportWidth, viewportHeight);
         renderer.enableScissorTest(true);
-        renderer.setClearColor(viewport.background);
+        renderer.setClearColor(BACKGROUND_COLOR);
         // F-f-f-f-fire yur layzar!!!
         renderer.render(this.scene, viewport.camera);
         renderer.enableScissorTest(false);
@@ -225,6 +229,21 @@ export default class Canvas extends React.Component {
     // Calculate canvas dimensions
     let renderCanvasWidth   = 2 * this.props.width;
     let renderCanvasHeight  = this.props.height;
+    // Calculate the camera distance
+    let cameraDistance = calculateCameraDistance(
+      FIELD_OF_VIEW,
+      (
+        (1 + (HORIZONTAL_VIEWPORT_PADDING * 2)) *
+        (this.props.boundingBox.max.x - this.props.boundingBox.min.x)
+      ),
+      (
+        (1 + (VERTICAL_VIEWPORT_PADDING * 2)) *
+        (this.props.boundingBox.max.y - this.props.boundingBox.min.y)
+      )
+    );
+    console.log('cameraDistance', cameraDistance);
+    // Create a static reference to the origin
+    let originVector = new Vector3(0, 0, 0);
     // Create a camera for each viewport
     let viewports = this.viewports;
     let viewport, camera;
@@ -240,13 +259,15 @@ export default class Canvas extends React.Component {
         10000
       );
       // Place the camera in 3D space
-      camera.position.x = viewport.eye[0];
-      camera.position.y = viewport.eye[1];
-      camera.position.z = viewport.eye[2];
+      camera.position.x = viewport.eye[0] * cameraDistance;
+      camera.position.y = viewport.eye[1] * cameraDistance;
+      camera.position.z = viewport.eye[2] * cameraDistance;
       // Set the up vector
       camera.up.x = 0;
       camera.up.y = 1;
       camera.up.z = 0;
+      // Re-focus on the origin
+      camera.lookAt(originVector);
       // Set the camera rotation up
       camera.rotation.set(
         viewport.rotation[0],

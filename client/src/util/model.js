@@ -17,3 +17,32 @@ export function calculateCenteringVector(boundingBox) {
   // Return the deltas
   return [ deltaX, deltaY, deltaZ ];
 }
+
+/**
+ * Calculates how far away the camera should be from the subject given the
+ * current field of view. Assumes symmetrical FOV in both width and height.
+ *
+ * @param  {Number} fieldOfView   the camera's field of view in degrees
+ * @param  {Number} visibleWidth  the width which the camera should see
+ * @param  {Number} visibleHeight the height which the camera should see
+ * @return {Number}               distance in the same units as `visibleHeight`
+ */
+export function calculateCameraDistance(
+  fieldOfView,
+  visibleWidth,
+  visibleHeight
+) {
+  let fieldOfViewInRadians = ((fieldOfView * Math.PI) / 180);
+  let distanceForVerticalVisibility =  (
+    visibleHeight / (2 * Math.tan(fieldOfViewInRadians / 2))
+  );
+  let distanceForHorizontalVisibility =  (
+    visibleWidth / (2 * Math.tan(fieldOfViewInRadians / 2))
+  );
+  // Return the greater of the two
+  if (distanceForHorizontalVisibility > distanceForVerticalVisibility) {
+    return distanceForHorizontalVisibility;
+  } else {
+    return distanceForVerticalVisibility;
+  }
+}
