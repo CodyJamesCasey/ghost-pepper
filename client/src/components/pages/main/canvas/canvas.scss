@@ -1,0 +1,18 @@
+.canvas-container {
+  position: absolute;
+  top:      75px;
+  left:     30px;
+  right:    30px;
+  bottom:   60px;
+  overflow: hidden;
+
+  &__render-canvas {
+    position: absolute;
+    visibility: hidden;
+  }
+
+  &__display-canvas {
+    position: absolute;
+    transform-origin: 0 0 0;
+  }
+}
