@@ -6,8 +6,12 @@
   bottom:   60px;
   overflow: hidden;
 
-  & > canvas {
-    border-radius:    4px;
+  &__render-canvas {
     transform-origin: 0 0 0;
+  }
+
+  &__display-canvas {
+    position: absolute;
+    visibility: hidden;
   }
 }
