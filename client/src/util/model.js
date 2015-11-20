@@ -1,3 +1,4 @@
+import { Matrix4, Vector3 } from 'three.js';
 /**
  * Figures out how far in every direction to shift the model in 3D space such
  * that the center of the model is at (0, 0, 0) in 3D space.
@@ -45,4 +46,19 @@ export function calculateCameraDistance(
   } else {
     return distanceForVerticalVisibility;
   }
+}
+
+export function rotateAboutAxis(model, thetaX, thetaY, thetaZ) {
+  var m = new Matrix4();
+  var mX = new Matrix4();
+  var mY = new Matrix4();
+  var mZ = new Matrix4();
+  mX.makeRotationX(thetaX);
+  mY.makeRotationY(thetaY);
+  mZ.makeRotationZ(thetaZ);
+  m.multiplyMatrices(mX, mY);
+  m.multiply(mZ);``
+  model.matrix.multiplyMatrices(mX, mY);
+  model.matrix.multiply(mZ);
+  model.rotation.setFromRotationMatrix(model.matrix);
 }

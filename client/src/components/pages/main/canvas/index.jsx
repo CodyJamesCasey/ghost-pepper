@@ -10,7 +10,7 @@ import {
   PerspectiveCamera
 } from 'three.js';
 
-import { calculateCameraDistance } from 'util/model';
+import { calculateCameraDistance, rotateAboutAxis } from 'util/model';
 
 // How do we wait for there to me no more window resize events before we
 // actually trigger changes to the DOM? WINDOW_RESIZE_WAIT_PERIOD is how long
@@ -215,6 +215,9 @@ export default class Canvas extends React.Component {
         rendererDimensions.height = renderCanvasHeight;
       }
       // Rotate the scene according to the rotation vector
+      // rotateAboutAxis(this.props.model, 0, 0, 0.01);
+      this.props.model.rotation.x += 0.01;
+      // this.props.model.position.add(new Vector3(0.4, 0.2, 0));
       // TODO (Sandile): rotate the model according to given rotation vector
       // Render each viewport
       let renderer  = this.renderer;
