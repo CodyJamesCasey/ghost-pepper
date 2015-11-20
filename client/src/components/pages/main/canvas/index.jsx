@@ -11,6 +11,7 @@ import {
 } from 'three.js';
 
 import { calculateCameraDistance, rotateAboutAxis } from 'util/model';
+import { projectFrame } from 'services/helpers/tunnel'
 
 // How do we wait for there to me no more window resize events before we
 // actually trigger changes to the DOM? WINDOW_RESIZE_WAIT_PERIOD is how long
@@ -240,8 +241,6 @@ export default class Canvas extends React.Component {
       }
     }
 
-    // Canvas to client
-
     // Resume the paint loop
     this.renderCanvasPaintRequestId = requestAnimationFrame(
       this.onRenderCanvasPaint
@@ -371,6 +370,10 @@ export default class Canvas extends React.Component {
         displayCanvasContext.restore();
       }
     }
+
+    // Send to tunnel
+    projectFrame(this.displayCanvas.toDataURL());
+
     // Resume the paint loop
     this.displayCanvasPaintRequestId = requestAnimationFrame(
       this.onDisplayCanvasPaint
