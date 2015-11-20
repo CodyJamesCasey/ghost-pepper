@@ -12,7 +12,8 @@ var HTML_OPTS   = {
   templateContent: "<!DOCTYPE html>" +
     "<html>" +
       "<head>" +
-        "<meta http-equiv='Content-type' content='text/html; charset=utf-8'/>" +
+        "<meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1'>" +
+        "<meta charset='utf-8'/>" +
         "<link rel='apple-touch-icon' href='/static/apple-touch-icon.png'>" +
         "<link rel='icon' type='image/png' href='/static/favicon-196x196.png' sizes='196x196'>" +
         "<title>{%= o.htmlWebpackPlugin.options.title %}</title>" +

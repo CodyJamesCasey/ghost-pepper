@@ -216,7 +216,7 @@ export default class Canvas extends React.Component {
       }
       // Rotate the scene according to the rotation vector
       // rotateAboutAxis(this.props.model, 0, 0, 0.01);
-      this.props.model.rotation.x += 0.01;
+      this.props.model.rotation.y += 0.01;
       // this.props.model.position.add(new Vector3(0.4, 0.2, 0));
       // TODO (Sandile): rotate the model according to given rotation vector
       // Render each viewport
@@ -239,6 +239,9 @@ export default class Canvas extends React.Component {
         renderer.enableScissorTest(false);
       }
     }
+
+    // Canvas to client
+
     // Resume the paint loop
     this.renderCanvasPaintRequestId = requestAnimationFrame(
       this.onRenderCanvasPaint

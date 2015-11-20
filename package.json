@@ -6,7 +6,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "rm -rf ./dist && (NODE_ENV=dev ./node_modules/webpack/bin/webpack.js --config ./client/webpack.config.js --watch --quiet) & (NODE_ENV=dev ./node_modules/webpack/bin/webpack.js --config ./projector/webpack.config.js --watch --quiet) & (./node_modules/nodemon/bin/nodemon.js ./server/index.js)",
-    "dev-windows":  "rm -rf \\dist && (SET NODE_ENV=dev & node .\\node_modules\\webpack\\bin\\webpack.js --config  .\\client\\webpack.config.js --watch --quiet) & (SET NODE_ENV=dev & node .\\node_modules\\webpack\\bin\\webpack.js --config  .\\project\\webpack.config.js --watch --quiet) & node .\\node_modules\\nodemon\\bin\\nodemon.js  .\\server\\index.js"
+    "dev-windows1":  "rm -rf \\dist && SET NODE_ENV=dev & node .\\node_modules\\webpack\\bin\\webpack.js --config  .\\client\\webpack.config.js --watch --quiet",
+    "dev-windows2": "SET NODE_ENV=dev & node .\\node_modules\\webpack\\bin\\webpack.js --config  .\\projector\\webpack.config.js --watch --quiet",
+    "dev-windows3": "node .\\node_modules\\nodemon\\bin\\nodemon.js  .\\server\\index.js"
+
   },
   "repository": {
     "type": "git",
