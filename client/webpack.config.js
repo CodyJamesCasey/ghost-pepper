@@ -9,19 +9,17 @@ var HTML_OPTS   = {
   title:    'Ghost Pepper Client',
   inject:   true,
   minify:   { collapseWhitespace: true, },
-  templateContent: `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
-        <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-        <link rel="icon" type="image/png" href="/static/favicon-196x196.png" sizes="196x196">
-        <title>{%= o.htmlWebpackPlugin.options.title %}</title>
-      </head>
-      <body>
-      </body>
-    </html>
-  `
+  templateContent: "<!DOCTYPE html>" +
+    "<html>" +
+      "<head>" +
+        "<meta http-equiv='Content-type' content='text/html; charset=utf-8'/>" +
+        "<link rel='apple-touch-icon' href='/static/apple-touch-icon.png'>" +
+        "<link rel='icon' type='image/png' href='/static/favicon-196x196.png' sizes='196x196'>" +
+        "<title>{%= o.htmlWebpackPlugin.options.title %}</title>" +
+      "</head>" +
+      "<body>" +
+      "</body>" +
+    "</html>"
 };
 
 module.exports = {

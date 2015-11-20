@@ -5,7 +5,8 @@
   "description": "First thing's first, [install git flow](https://github.com/nvie/gitflow/wiki/Installation).   After that, the **client** folder has source code for the rendering/opengl layer, and the **server** folder has source code for displayingrendered images and handling positioning logic.",
   "main": "index.js",
   "scripts": {
-    "dev": "rm -rf ./dist && (NODE_ENV=dev ./node_modules/webpack/bin/webpack.js --config ./client/webpack.config.js --watch --quiet) & (NODE_ENV=dev ./node_modules/webpack/bin/webpack.js --config ./projector/webpack.config.js --watch --quiet) & (./node_modules/nodemon/bin/nodemon.js ./server/index.js)"
+    "dev": "rm -rf ./dist && (NODE_ENV=dev ./node_modules/webpack/bin/webpack.js --config ./client/webpack.config.js --watch --quiet) & (NODE_ENV=dev ./node_modules/webpack/bin/webpack.js --config ./projector/webpack.config.js --watch --quiet) & (./node_modules/nodemon/bin/nodemon.js ./server/index.js)",
+    "dev-windows":  "rm -rf \\dist && (SET NODE_ENV=dev & node .\\node_modules\\webpack\\bin\\webpack.js --config  .\\client\\webpack.config.js --watch --quiet) & (SET NODE_ENV=dev & node .\\node_modules\\webpack\\bin\\webpack.js --config  .\\project\\webpack.config.js --watch --quiet) & node .\\node_modules\\nodemon\\bin\\nodemon.js  .\\server\\index.js"
   },
   "repository": {
     "type": "git",
