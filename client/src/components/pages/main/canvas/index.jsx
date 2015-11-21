@@ -10,8 +10,8 @@ import {
   PerspectiveCamera
 } from 'three.js';
 
+import { sendFrameToProjector } from 'flux/action-creators';
 import { calculateCameraDistance, rotateAboutAxis } from 'util/model';
-import { projectFrame } from 'services/helpers/tunnel'
 
 // How do we wait for there to me no more window resize events before we
 // actually trigger changes to the DOM? WINDOW_RESIZE_WAIT_PERIOD is how long
@@ -46,6 +46,8 @@ export default class Canvas extends React.Component {
   /**************************** STATIC VARIABLES *****************************/
 
   static propTypes = {
+    // The redux store dispatch function
+    dispatch:     React.PropTypes.func.isRequired,
     // The model to be rendered
     model:        React.PropTypes.any.isRequired,
     // The bounding box of the model
@@ -64,12 +66,13 @@ export default class Canvas extends React.Component {
 
   // React component props
   props = {
-    model:  null,
-    width:  0,
-    height: 0,
-    thetaX: 0,
-    thetaY: 0,
-    thetaZ: 0
+    dispatch: () => {},
+    model:    null,
+    width:    0,
+    height:   0,
+    thetaX:   0,
+    thetaY:   0,
+    thetaZ:   0
   }
 
   // Paint animation frame ref
@@ -161,10 +164,10 @@ export default class Canvas extends React.Component {
     window.removeEventListener('resize', this.onWindowResized);
     // Cancel the next paint cycle
     if (this.renderCanvasPaintRequestId) {
-      clearAnimationFrame(this.renderCanvasPaintRequestId);
+      cancelAnimationFrame(this.renderCanvasPaintRequestId);
     }
     if (this.displayCanvasPaintRequestId) {
-      clearAnimationFrame(this.displayCanvasPaintRequestId);
+      cancelAnimationFrame(this.displayCanvasPaintRequestId);
     }
     // Cancel any pending window resize events
     if (this.windowResizeTimeoutRef) clearTimeout(this.windowResizeTimeoutRef);
@@ -217,7 +220,7 @@ export default class Canvas extends React.Component {
       }
       // Rotate the scene according to the rotation vector
       // rotateAboutAxis(this.props.model, 0, 0, 0.01);
-      this.props.model.rotation.y += 0.01;
+      this.props.model.rotation.y += 0.1;
       // this.props.model.position.add(new Vector3(0.4, 0.2, 0));
       // TODO (Sandile): rotate the model according to given rotation vector
       // Render each viewport
@@ -369,11 +372,10 @@ export default class Canvas extends React.Component {
         // Return to the original matrix state
         displayCanvasContext.restore();
       }
+      // Make sure the projector gets the frame data
+      let frameDataUrl = displayCanvas.toDataURL('image/jpeg');
+      this.props.dispatch(sendFrameToProjector(frameDataUrl));
     }
-
-    // Send to tunnel
-    projectFrame(this.displayCanvas.toDataURL());
-
     // Resume the paint loop
     this.displayCanvasPaintRequestId = requestAnimationFrame(
       this.onDisplayCanvasPaint

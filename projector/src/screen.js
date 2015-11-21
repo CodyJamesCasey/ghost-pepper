@@ -24,11 +24,12 @@ export function create(socket) {
   context = canvas.getContext('2d');
   // Create the image last
   img = new Image();
-  img.onload = () => context.drawImage(img, 0, 0);
 }
 
 export function paint(dataUrl) {
-  img.src(dataUrl);
+  img.src = dataUrl;
+  console.log('paint');
+  context.drawImage(img, 0, 0);
 }
 
 export function clear() {

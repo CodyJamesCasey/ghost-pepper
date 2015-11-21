@@ -1,3 +1,8 @@
 import { start as createTunnel } from './tunnel';
-// Create the tunnel
+import { create as createScreen } from './screen';
+
+// Put the styles in the DOM
+require('./projector.scss');
+
 createTunnel();
+createScreen();

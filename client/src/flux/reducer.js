@@ -2,13 +2,14 @@ import assign from 'object-assign';
 
 import * as actions from './actions';
 
-const INITIAL_STATE = {
+const INITIAL_STATE       = {
   socketLive:               false,
   socketError:              null,
   tunnelLive:               false,
   tunnelError:              null,
   currentModel:             null,
   currentModelBoundingBox:  null,
+  projectorEndpoint:        null,
   rotationVector:           {
     x: 0,
     y: 0,
@@ -19,6 +20,7 @@ const INITIAL_STATE = {
     height: 600
   }
 };
+const EVENT_FRAME_RENDERED = 'client:frame-rendered';
 
 export default function reducer(state = INITIAL_STATE, action) {
   // Create variables
@@ -57,6 +59,16 @@ export default function reducer(state = INITIAL_STATE, action) {
     clonedState.currentModelBoundingBox = action.boundingBox;
     // Update state with new model
     return clonedState;
+  case actions.SET_PROJECTOR_ENDPOINT:
+    return assign({}, state, {
+      projectorEndpoint: action.endpointFunction
+    });
+  case actions.SEND_FRAME_TO_PROJECTOR:
+    if (state.projectorEndpoint) {
+      state.projectorEndpoint(EVENT_FRAME_RENDERED, action.frameDataUrl);
+    }
+    // Don't change state at all
+    return state;
   default:
     return state;
   }

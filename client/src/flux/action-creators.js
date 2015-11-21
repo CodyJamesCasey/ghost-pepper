@@ -40,3 +40,17 @@ export function set3DModel(model, boundingBox) {
     boundingBox:  boundingBox
   };
 }
+
+export function setProjectorEndpoint(endpointFunction) {
+  return {
+    type:               actions.SET_PROJECTOR_ENDPOINT,
+    endpointFunction:   endpointFunction
+  };
+}
+
+export function sendFrameToProjector(frameDataUrl) {
+  return {
+    type:         actions.SEND_FRAME_TO_PROJECTOR,
+    frameDataUrl: frameDataUrl
+  };
+}

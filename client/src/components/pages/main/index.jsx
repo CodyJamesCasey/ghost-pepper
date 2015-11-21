@@ -62,6 +62,7 @@ export default class MainPage extends React.Component {
       this.props.boundingBox) {
       canvas = (
         <Canvas
+          dispatch={this.props.dispatch}
           model={this.props.model}
           width={this.props.width}
           height={this.props.height}

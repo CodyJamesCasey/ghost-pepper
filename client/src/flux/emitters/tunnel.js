@@ -6,7 +6,8 @@ import {
   updateSocketStatus,
   updateTunnelStatus,
   updateModelRotationVector,
-  updateTargetResolution
+  updateTargetResolution,
+  setProjectorEndpoint
 } from 'flux/action-creators';
 
 const EVENT_CLIENT_READY             = 'client:ready';
@@ -15,10 +16,6 @@ const EVENT_ROTATION_VECTOR_CHANGED  = 'projector:vector-changed';
 const EVENT_RESOLUTION_CHANGED       = 'projector:resolution-changed';
 const EVENT_FRAME_RENDERED           = 'client:frame-rendered';
 const EVENT_PROJECTOR_DISCONNECTED   = 'projector:disconnected';
-
-// The function that is only not-null when the tunnel is live; Sends the latest
-// frame to the projector.
-let emitFrameRendered = null;
 
 /**
  * Starts the socket and tunnel connections respectively. Updates flux state
@@ -56,13 +53,13 @@ export function start(dispatch) {
       tunnel.on('open', () => {
         // Update the tunnel connection status
         dispatch(updateTunnelStatus(true));
-        // Set emitFrameRendered
-        emitFrameRendered = (frame) => {
+        // Ensure that the rest of the webapp can send stuff to the projector
+        dispatch(setProjectorEndpoint((event, data) => {
           tunnel.send({
-            type:    EVENT_FRAME_RENDERED,
-            payload: frame
+            type:    event,
+            payload: data
           });
-        };
+        }));
       });
       tunnel.on('data', data => {
         // Get the type and payload from data
@@ -84,34 +81,20 @@ export function start(dispatch) {
       tunnel.on('close', () => {
         // Update the tunnel connection status
         dispatch(updateTunnelStatus(false));
-        // Clear emitFrameRendered
-        emitFrameRendered = null;
+        // Clear endpoint since projector no longer reachable
+        dispatch(setProjectorEndpoint(null));
       });
       tunnel.on('error', err => {
         // Update the tunnel connection status
         dispatch(updateTunnelStatus(false, err));
-        // Clear emitFrameRendered
-        emitFrameRendered = null;
       });
       socket.on(EVENT_PROJECTOR_DISCONNECTED, () => {
         // Update the tunnel connection status
         dispatch(updateTunnelStatus(false, 'The projector disconnected'));
-        // Clear emitFrameRendered
-        emitFrameRendered = null;
+        // Clear endpoint since projector no longer reachable
+        dispatch(setProjectorEndpoint(null));
+        // TODO (Sandile): close the webrtc tunnel on this event
       });
     });
   });
-}
-
-/**
- * Sends a frame of image data to the projector to be shown on the screen. This
- * function only works if the tunnel is currently live.
- *
- * @param  {String} frame serialized frame data in the form of a data url
- */
-export function projectFrame(frame) {
-  if (emitFrameRendered) {
-    // If emitFrameRendered is truthy, it is a function, so proceed
-    emitFrameRendered(frame);
-  }
 }
