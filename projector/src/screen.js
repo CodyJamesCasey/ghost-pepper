@@ -29,7 +29,7 @@ export function create(socket) {
 export function paint(dataUrl) {
   img.src = dataUrl;
   console.log('paint');
-  context.drawImage(img, 0, 0);
+  context.drawImage(img, 0, 0, canvas.width, canvas.height);
 }
 
 export function clear() {
