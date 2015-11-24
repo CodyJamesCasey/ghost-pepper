@@ -373,8 +373,10 @@ export default class Canvas extends React.Component {
         displayCanvasContext.restore();
       }
       // Make sure the projector gets the frame data
-      let frameDataUrl = displayCanvas.toDataURL('image/jpeg');
-      this.props.dispatch(sendFrameToProjector(frameDataUrl));
+      let frameDataUrl = displayCanvas.toBlob( function(blob) {
+        let url = URL.createObjectURL(blob);
+        this.props.dispatch(sendFrameToProjector(url));
+      }.bind(this), "image/jpeg", 0.5);
     }
     // Resume the paint loop
     this.displayCanvasPaintRequestId = requestAnimationFrame(

@@ -27,9 +27,9 @@ export function create(socket) {
 }
 
 export function paint(dataUrl) {
+  context.drawImage(img, 0, 0, canvas.width, canvas.height);
   img.src = dataUrl;
   console.log('paint');
-  context.drawImage(img, 0, 0, canvas.width, canvas.height);
 }
 
 export function clear() {
