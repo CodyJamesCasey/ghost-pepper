@@ -262,6 +262,9 @@ export default class Canvas extends React.Component {
       let renderCanvas = this.renderer.domElement;
       let displayCanvasWidth = this.props.width * pixelDensity;
       let displayCanvasHeight = this.props.height * pixelDensity;
+      //though our canvas is a rectangle because of most monitors, the image will need to fit in a squre within the canvas
+      let displayCanvasLeftStart = (displayCanvasWidth - displayCanvasHeight) / 2;
+      let displayCanvasRightEnd = displayCanvasLeftStart + displayCanvasHeight;
       // Detect a resize
       if (displayCanvasWidth !== displayCanvasDimensions.width ||
         displayCanvasHeight !== displayCanvasDimensions.height) {
@@ -296,19 +299,19 @@ export default class Canvas extends React.Component {
         // Choose start point for triangle
         switch (i) {
           case VIEWPORT_FRONT:
-          displayCanvasContext.moveTo(0, displayCanvasHeight);
+          displayCanvasContext.moveTo(displayCanvasLeftStart, displayCanvasHeight);
           break;
           case VIEWPORT_RIGHT:
           displayCanvasContext.moveTo(
-            displayCanvasWidth,
+            displayCanvasRightEnd,
             displayCanvasHeight
           );
           break;
           case VIEWPORT_BACK:
-          displayCanvasContext.moveTo(displayCanvasWidth, 0);
+          displayCanvasContext.moveTo(displayCanvasRightEnd, 0);
           break;
           case VIEWPORT_LEFT:
-          displayCanvasContext.moveTo(0, 0);
+          displayCanvasContext.moveTo(displayCanvasLeftStart, 0);
           break;
         }
         // All triangles point to the center
@@ -320,18 +323,18 @@ export default class Canvas extends React.Component {
         switch (i) {
           case VIEWPORT_FRONT:
           displayCanvasContext.lineTo(
-            displayCanvasWidth,
+            displayCanvasRightEnd,
             displayCanvasHeight
           );
           break;
           case VIEWPORT_RIGHT:
-          displayCanvasContext.lineTo(displayCanvasWidth, 0);
+          displayCanvasContext.lineTo(displayCanvasRightEnd, 0);
           break;
           case VIEWPORT_BACK:
-          displayCanvasContext.lineTo(0, 0);
+          displayCanvasContext.lineTo(displayCanvasLeftStart, 0);
           break;
           case VIEWPORT_LEFT:
-          displayCanvasContext.lineTo(0, displayCanvasHeight);
+          displayCanvasContext.lineTo(displayCanvasLeftStart, displayCanvasHeight);
           break;
         }
         // Create the triangle & the clipping mask along with it
