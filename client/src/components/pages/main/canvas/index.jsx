@@ -348,7 +348,7 @@ export default class Canvas extends React.Component {
           viewportDisplayCanvasOriginY = displayCanvasHeight / 2;
           break;
           case VIEWPORT_RIGHT:
-          viewportDisplayCanvasOriginX = displayCanvasWidth / 2;
+          viewportDisplayCanvasOriginX = displayCanvasWidth / 2 - displayCanvasHeight / 2;
           viewportDisplayCanvasOriginY = 0;
           break;
           case VIEWPORT_BACK:
@@ -356,7 +356,7 @@ export default class Canvas extends React.Component {
           viewportDisplayCanvasOriginY = 0;
           break;
           case VIEWPORT_LEFT:
-          viewportDisplayCanvasOriginX = 0;
+          viewportDisplayCanvasOriginX = displayCanvasLeftStart / 2;
           viewportDisplayCanvasOriginY = 0;
           break;
         }
@@ -369,7 +369,7 @@ export default class Canvas extends React.Component {
           viewportHeight,
           viewportDisplayCanvasOriginX,
           viewportDisplayCanvasOriginY,
-          viewportWidth,
+          viewportDisplayCanvasOriginX + viewportWidth,
           viewportHeight
         );
         // Return to the original matrix state
