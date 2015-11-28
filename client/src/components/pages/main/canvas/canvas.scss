@@ -1,10 +1,12 @@
 .canvas-container {
-  position: absolute;
-  top:      75px;
-  left:     30px;
-  right:    30px;
-  bottom:   60px;
-  overflow: hidden;
+  position:       absolute;
+  top:            75px;
+  left:           30px;
+  right:          30px;
+  bottom:         60px;
+  border-radius:  4px;
+  background:     black;
+  overflow:       hidden;
 
   &__render-canvas {
     position: absolute;
