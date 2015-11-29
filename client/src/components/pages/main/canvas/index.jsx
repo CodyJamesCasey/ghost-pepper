@@ -30,7 +30,7 @@ const VIEWPORT_RIGHT              = 1;
 const VIEWPORT_BACK               = 2;
 const VIEWPORT_LEFT               = 3;
 // Target frame transmission period
-const FRAME_TRANSMISSION_PERIOD   = 1000 / 25; // 25 frames per second
+const DEFAULT_FRAME_TRANS_PERIOD  = 1000 / 25; // 25 frames per second
 
 // Load component styles
 require('./canvas.scss');
@@ -98,7 +98,7 @@ export default class Canvas extends React.Component {
   // True if the display canvas is in the DOM
   displayCanvasCreated          = false
   //
-  frameTransmissionPeriod       = FRAME_TRANSMISSION_PERIOD
+  frameTransmissionPeriod       = DEFAULT_FRAME_TRANS_PERIOD
   // The different perspectives to be rendered concurrently
   perspectiveViewports          = [
     // Front
@@ -173,6 +173,9 @@ export default class Canvas extends React.Component {
 
   /***************************** EVENT HANDLERS ******************************/
 
+  /**
+   * Called whenever the window resizes.
+   */
   onWindowResized = () => {
     // Cancel the previous window resize timeout
     if (this.windowResizeTimeoutRef) clearTimeout(this.windowResizeTimeoutRef);
@@ -183,6 +186,10 @@ export default class Canvas extends React.Component {
     );
   }
 
+  /**
+   * Called whenever its time for the render canvas to update. Uses
+   * `requestAnimationFrame` to call itself indefinitely.
+   */
   onRenderCanvasPaint = () => {
     // Only do anything if initialized
     if (this.renderCanvasCreated) {
@@ -230,6 +237,10 @@ export default class Canvas extends React.Component {
     );
   }
 
+  /**
+   * Called whenever its time for the display canvas to update. Uses
+   * `requestAnimationFrame` to call itself indefinitely.
+   */
   onDisplayCanvasPaint = () => {
     // Only do anything if initialized
     if (this.displayCanvasCreated) {
@@ -317,6 +328,10 @@ export default class Canvas extends React.Component {
     );
   }
 
+  /**
+   * Called whenever a snapshot of the display canvas needs to be sent to the
+   * projector over WebRTC. This function invokes itself kind of like a loop.
+   */
   onTransmitFrame = () => {
     let beginTime = Date.now();
     this.displayCanvas.toBlob(
@@ -350,7 +365,8 @@ export default class Canvas extends React.Component {
   /**************************** HELPER FUNCTIONS *****************************/
 
   /**
-   * Figures out how big each perspective viewport should be
+   * Figures out how big each perspective viewport should be.
+   *
    * @return {Object} Object with width and height properties
    */
   calculatePerspectiveViewportDimensions = () => {
@@ -370,6 +386,11 @@ export default class Canvas extends React.Component {
     return { perspectiveViewportWidth, perspectiveViewportHeight };
   }
 
+  /**
+   * Calculates how big the render canvas should be.
+   *
+   * @return {Object} Object specifying the width and height of render canvas
+   */
   calculateRenderCanvasDimensions = () => {
     let {
       perspectiveViewportWidth,
@@ -381,6 +402,11 @@ export default class Canvas extends React.Component {
     };
   }
 
+  /**
+   * Calculates how big the display canvas should be.
+   *
+   * @return {Object} Object specifying the width and height of display canvas
+   */
   calculateDisplayCanvasDimensions = () => {
     let {
       perspectiveViewportWidth,
@@ -392,6 +418,13 @@ export default class Canvas extends React.Component {
     };
   }
 
+  /**
+   * Creates a triangular clipping region for the specified viewport.
+   * @param  {Canvas2DRenderingContext} ctx
+   * @param  {Number} viewportIndex           the index of the viewport
+   * @param  {Number} halfDisplayCanvasWidth  the width of the display canvas / 2
+   * @param  {Number} halfDisplayCanvasHeight the height of the display canvas / 2
+   */
   clipForPerspectiveViewport = (
     ctx,
     viewportIndex,
@@ -445,6 +478,12 @@ export default class Canvas extends React.Component {
     ctx.clip();
   }
 
+  /**
+   * Rotates the display canvas for specified viewport.
+   *
+   * @param  {Canvas2DRenderingContext} ctx
+   * @param  {Number} viewportIndex the index of the viewport being rendered
+   */
   rotateForPerspectiveViewport = (
     ctx,
     viewportIndex
