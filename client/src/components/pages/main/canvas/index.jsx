@@ -208,10 +208,11 @@ export default class Canvas extends React.Component {
         rendererDimensions.renderCanvasHeight = renderCanvasHeight;
       }
       // Rotate the scene according to the rotation vector
-      // rotateAboutAxis(this.props.model, 0, 0, 0.01);
-      this.props.model.rotation.y += 0.1;
-      // this.props.model.position.add(new Vector3(0.4, 0.2, 0));
-      // TODO (Sandile): rotate the model according to given rotation vector
+      let modelRotation = this.props.model.rotation;
+      let { thetaX, thetaY, thetaZ } = this.props;
+      modelRotation.x = thetaX || 0;
+      modelRotation.y = thetaY || 0;
+      modelRotation.z = thetaZ || 0;
       // Render each viewport
       let renderer              = this.renderer;
       let perspectiveViewports  = this.perspectiveViewports;
