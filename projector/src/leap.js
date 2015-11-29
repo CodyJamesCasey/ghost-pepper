@@ -42,7 +42,7 @@ let eventHandler;
 setInterval(() => {
   theta.y += 0.05;
   if (eventHandler) eventHandler(theta);
-}, 50);
+}, 34);
 
 export function bind(newEventHandler) {
   eventHandler = newEventHandler;
