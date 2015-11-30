@@ -24,11 +24,13 @@ const BACKGROUND_COLOR            = (new Color()).setRGB(0, 0, 0);
 // What percent space to leave between the viewport boundary and the model
 const VERTICAL_VIEWPORT_PADDING   = 0.1;
 const HORIZONTAL_VIEWPORT_PADDING = 0.15;
-// Indices of the viewports array
+// Indices of the perspectiveViewports array
 const VIEWPORT_FRONT              = 0;
 const VIEWPORT_RIGHT              = 1;
 const VIEWPORT_BACK               = 2;
 const VIEWPORT_LEFT               = 3;
+// Target frame transmission period
+const DEFAULT_FRAME_TRANS_PERIOD  = 1000 / 25; // 25 frames per second
 
 // Load component styles
 require('./canvas.scss');
@@ -76,32 +78,31 @@ export default class Canvas extends React.Component {
   }
 
   // Paint animation frame ref
-  renderCanvasPaintRequestId  = null
-  displayCanvasPaintRequestId = null
+  renderCanvasPaintRequestId    = null
+  displayCanvasPaintRequestId   = null
   // How we wait until the resize is done
-  windowResizeTimeoutRef      = null
+  windowResizeTimeoutRef        = null
+  transmitFrameTimeoutRef       = null
   // The three.js scene
-  scene                       = null
+  scene                         = null
   // The WebGL renderer
-  renderer                    = null
+  renderer                      = null
   // Last recorded dimensions of the renderer
-  rendererDimensions          = null
+  rendererDimensions            = null
   // True if the render canvas is in the DOM
-  renderCanvasCreated         = false
+  renderCanvasCreated           = false
   // The canvas streamed to the projector
-  displayCanvas               = null
+  displayCanvas                 = null
   // The dimensions of the canvas streamed to the projector
-  displayCanvasDimensions     = null
+  displayCanvasDimensions       = null
   // True if the display canvas is in the DOM
-  displayCanvasCreated        = false
+  displayCanvasCreated          = false
+  //
+  frameTransmissionPeriod       = DEFAULT_FRAME_TRANS_PERIOD
   // The different perspectives to be rendered concurrently
-  viewports                   = [
+  perspectiveViewports          = [
     // Front
     {
-      left:       0.25,
-      bottom:     0,
-      width:      0.5,
-      height:     0.5,
       eye:        [ 0, 0, 1 ],
       up:         [ 0, 1, 0 ],
       rotation:   [ 0, 0, 0 ],
@@ -109,34 +110,22 @@ export default class Canvas extends React.Component {
     },
     // Right
     {
-      left:       0.75,
-      bottom:     0,
-      width:      0.25,
-      height:     1.0,
       eye:        [ 1, 0, 0 ],
       up:         [ 0, 1, 0 ],
-      rotation:   [ 0, (Math.PI / 2), -1 * (Math.PI / 2) ],
+      rotation:   [ 0, (Math.PI / 2), 0 ],
       camera:     null
     },
     // Back
     {
-      left:       0.25,
-      bottom:     0.5,
-      width:      0.5,
-      height:     0.5,
       eye:        [ 0, 0, -1 ],
-      rotation:   [ 0, Math.PI, -1 * Math.PI ],
+      rotation:   [ 0, Math.PI, 0 ],
       fov:        45,
       camera:     null
     },
     // Left
     {
-      left:       0,
-      bottom:     0,
-      width:      0.25,
-      height:     1.0,
       eye:        [ -1, 0, 0 ],
-      rotation:   [ 0, -1 * (Math.PI / 2), Math.PI / 2 ],
+      rotation:   [ 0, -1 * (Math.PI / 2), 0 ],
       fov:        45,
       camera:     null
     }
@@ -157,6 +146,8 @@ export default class Canvas extends React.Component {
     this.displayCanvasPaintRequestId  = requestAnimationFrame(
       this.onDisplayCanvasPaint
     );
+    // Start the frame transmission loop
+    this.onTransmitFrame();
   }
 
   componentWillUnmount = () => {
@@ -171,6 +162,8 @@ export default class Canvas extends React.Component {
     }
     // Cancel any pending window resize events
     if (this.windowResizeTimeoutRef) clearTimeout(this.windowResizeTimeoutRef);
+    // Cancel frame transmission
+    if (this.transmitFrameTimeoutRef) clearTimeout(this.transmitFrameTimeoutRef);
   }
 
   shouldComponentUpdate = () => {
@@ -180,6 +173,9 @@ export default class Canvas extends React.Component {
 
   /***************************** EVENT HANDLERS ******************************/
 
+  /**
+   * Called whenever the window resizes.
+   */
   onWindowResized = () => {
     // Cancel the previous window resize timeout
     if (this.windowResizeTimeoutRef) clearTimeout(this.windowResizeTimeoutRef);
@@ -190,55 +186,47 @@ export default class Canvas extends React.Component {
     );
   }
 
+  /**
+   * Called whenever its time for the render canvas to update. Uses
+   * `requestAnimationFrame` to call itself indefinitely.
+   */
   onRenderCanvasPaint = () => {
     // Only do anything if initialized
     if (this.renderCanvasCreated) {
-      // Calculate canvas dimensions
-      let renderCanvasWidth   = 2 * this.props.width;
-      let renderCanvasHeight  = this.props.height;
+      let {
+        renderCanvasWidth,
+        renderCanvasHeight
+      } = this.calculateRenderCanvasDimensions();
       // First, check to see if we need to resize
       let rendererDimensions = this.rendererDimensions;
-      if (rendererDimensions.width !== renderCanvasWidth ||
-        rendererDimensions.height !== renderCanvasHeight) {
+      if (rendererDimensions.renderCanvasWidth !== renderCanvasWidth ||
+        rendererDimensions.renderCanvasHeight !== renderCanvasHeight) {
         // Tell the render to fix itself
         this.renderer.setSize(renderCanvasWidth, renderCanvasHeight);
-        // Update cameras
-        let viewport, camera;
-        for (let i = 0; i < 1; i++) {
-          viewport = this.viewports[i];
-          camera = viewport.camera;
-          camera.aspect = (
-            (renderCanvasWidth * viewport.width) /
-            (renderCanvasHeight * viewportHeight)
-          );
-          // Update the projection matrix
-          camera.updateProjectionMatrix();
-        }
         // Update the dimensions object
-        rendererDimensions.width  = renderCanvasWidth;
-        rendererDimensions.height = renderCanvasHeight;
+        rendererDimensions.renderCanvasWidth  = renderCanvasWidth;
+        rendererDimensions.renderCanvasHeight = renderCanvasHeight;
       }
       // Rotate the scene according to the rotation vector
-      // rotateAboutAxis(this.props.model, 0, 0, 0.01);
-      this.props.model.rotation.y += 0.1;
-      // this.props.model.position.add(new Vector3(0.4, 0.2, 0));
-      // TODO (Sandile): rotate the model according to given rotation vector
+      let modelRotation = this.props.model.rotation;
+      let { thetaX, thetaY, thetaZ } = this.props;
+      modelRotation.x = thetaX || 0;
+      modelRotation.y = thetaY || 0;
+      modelRotation.z = thetaZ || 0;
       // Render each viewport
-      let renderer  = this.renderer;
-      let viewports = this.viewports;
-      let viewport, left, bottom, viewportWidth, viewportHeight;
-      for (let i = 0; i < viewports.length; i++) {
-        viewport        = viewports[i];
-        left            = Math.floor(viewport.left    * renderCanvasWidth);
-        bottom          = Math.floor(viewport.bottom  * renderCanvasHeight);
-        viewportWidth   = Math.floor(viewport.width   * renderCanvasWidth);
-        viewportHeight  = Math.floor(viewport.height  * renderCanvasHeight);
+      let renderer              = this.renderer;
+      let perspectiveViewports  = this.perspectiveViewports;
+      let viewportWidth         = renderCanvasWidth / 4;
+      let viewportHeight        = renderCanvasHeight;
+      let viewport, left;
+      for (let i = 0; i < perspectiveViewports.length; i++) {
+        viewport        = perspectiveViewports[i];
+        left            = i * viewportWidth;
         // Configure the renderer
-        renderer.setViewport(left, bottom, viewportWidth, viewportHeight);
-        renderer.setScissor(left, bottom, viewportWidth, viewportHeight);
+        renderer.setViewport(left, 0, viewportWidth, viewportHeight);
+        renderer.setScissor(left, 0, viewportWidth, viewportHeight);
         renderer.enableScissorTest(true);
         renderer.setClearColor(BACKGROUND_COLOR);
-        // F-f-f-f-fire yur layzar!!!
         renderer.render(this.scene, viewport.camera);
         renderer.enableScissorTest(false);
       }
@@ -250,136 +238,90 @@ export default class Canvas extends React.Component {
     );
   }
 
+  /**
+   * Called whenever its time for the display canvas to update. Uses
+   * `requestAnimationFrame` to call itself indefinitely.
+   */
   onDisplayCanvasPaint = () => {
     // Only do anything if initialized
     if (this.displayCanvasCreated) {
       // Localize instance variables
-      let viewports = this.viewports;
-      let pixelDensity = window.devicePixelRatio;
+      let {
+        displayCanvasWidth,
+        displayCanvasHeight
+      } = this.calculateDisplayCanvasDimensions();
+      let pixelRatio = window.devicePixelRatio || 1;
+      let renderCanvas = this.renderer.domElement;
       let displayCanvas = this.displayCanvas;
       let displayCanvasContext = this.displayCanvas.getContext('2d');
+      let perspectiveViewports = this.perspectiveViewports;
+      let halfDisplayCanvasWidth = displayCanvasWidth / 2;
+      let halfDisplayCanvasHeight = displayCanvasHeight / 2;
       let displayCanvasDimensions = this.displayCanvasDimensions;
-      let renderCanvas = this.renderer.domElement;
-      let displayCanvasWidth = this.props.width * pixelDensity;
-      let displayCanvasHeight = this.props.height * pixelDensity;
-      //though our canvas is a rectangle because of most monitors, the image will need to fit in a squre within the canvas
-      let displayCanvasLeftStart = (displayCanvasWidth - displayCanvasHeight) / 2;
-      let displayCanvasRightEnd = displayCanvasLeftStart + displayCanvasHeight;
       // Detect a resize
-      if (displayCanvasWidth !== displayCanvasDimensions.width ||
-        displayCanvasHeight !== displayCanvasDimensions.height) {
+      if (displayCanvasWidth !== displayCanvasDimensions.displayCanvasWidth ||
+        displayCanvasHeight !== displayCanvasDimensions.displayCanvasHeight) {
         // Update the canvas size in DOM
         displayCanvas.width = displayCanvasWidth;
         displayCanvas.height = displayCanvasHeight;
         // Update dimensions in memory
-        displayCanvasDimensions.width = displayCanvasWidth;
-        displayCanvasDimensions.height = displayCanvasHeight;
+        displayCanvasDimensions.displayCanvasWidth = displayCanvasWidth;
+        displayCanvasDimensions.displayCanvasHeight = displayCanvasHeight;
         // Update the display canvas position
-        this.repositionDisplayCanvas();
+        setTimeout(() => this.repositionDisplayCanvas(), 0);
       }
-      // Reset the canvas for the new round of blitting
+      // Reset the canvas before new paints
       displayCanvasContext.clearRect(
         0,
         0,
         displayCanvasWidth,
         displayCanvasHeight
       );
+      // Record the initial canvas state so we can return
+      displayCanvasContext.save();
+      // Center the canvas
+      displayCanvasContext.translate(
+        halfDisplayCanvasWidth,
+        halfDisplayCanvasHeight
+      );
       // Loop through each view port, create a clipping mask, blit its contents,
       // then remove the clipping mask
       let viewport;
-      let viewportWidth;
-      let viewportHeight;
-      let viewportDisplayCanvasOriginX;
-      let viewportDisplayCanvasOriginY;
-      for (let i = 0; i < viewports.length; i++) {
-        viewport = viewports[i];
+      let viewportWidth = displayCanvasWidth;
+      let viewportHeight = viewportWidth / 2;
+      for (let i = 0; i < perspectiveViewports.length; i++) {
+        viewport = perspectiveViewports[i];
         // Bookmark the current matrix
         displayCanvasContext.save();
-        displayCanvasContext.beginPath();
-        // Choose start point for triangle
-        switch (i) {
-          case VIEWPORT_FRONT:
-          displayCanvasContext.moveTo(displayCanvasLeftStart, displayCanvasHeight);
-          break;
-          case VIEWPORT_RIGHT:
-          displayCanvasContext.moveTo(
-            displayCanvasRightEnd,
-            displayCanvasHeight
-          );
-          break;
-          case VIEWPORT_BACK:
-          displayCanvasContext.moveTo(displayCanvasRightEnd, 0);
-          break;
-          case VIEWPORT_LEFT:
-          displayCanvasContext.moveTo(displayCanvasLeftStart, 0);
-          break;
-        }
-        // All triangles point to the center
-        displayCanvasContext.lineTo(
-          displayCanvasWidth / 2,
-          displayCanvasHeight / 2
-        );
-        // Choose end point for triangle
-        switch (i) {
-          case VIEWPORT_FRONT:
-          displayCanvasContext.lineTo(
-            displayCanvasRightEnd,
-            displayCanvasHeight
-          );
-          break;
-          case VIEWPORT_RIGHT:
-          displayCanvasContext.lineTo(displayCanvasRightEnd, 0);
-          break;
-          case VIEWPORT_BACK:
-          displayCanvasContext.lineTo(displayCanvasLeftStart, 0);
-          break;
-          case VIEWPORT_LEFT:
-          displayCanvasContext.lineTo(displayCanvasLeftStart, displayCanvasHeight);
-          break;
-        }
         // Create the triangle & the clipping mask along with it
-        displayCanvasContext.clip();
-        // Calculate the rest of the viewport dimensions
-        viewportWidth = viewport.width * 2 * displayCanvasWidth;
-        viewportHeight = viewport.height * displayCanvasHeight;
-        switch (i) {
-          case VIEWPORT_FRONT:
-          viewportDisplayCanvasOriginX = 0;
-          viewportDisplayCanvasOriginY = displayCanvasHeight / 2;
-          break;
-          case VIEWPORT_RIGHT:
-          viewportDisplayCanvasOriginX = displayCanvasWidth / 2 - displayCanvasHeight / 2;
-          viewportDisplayCanvasOriginY = 0;
-          break;
-          case VIEWPORT_BACK:
-          viewportDisplayCanvasOriginX = 0;
-          viewportDisplayCanvasOriginY = 0;
-          break;
-          case VIEWPORT_LEFT:
-          viewportDisplayCanvasOriginX = displayCanvasLeftStart / 2;
-          viewportDisplayCanvasOriginY = 0;
-          break;
-        }
+        this.clipForPerspectiveViewport(
+          displayCanvasContext,
+          i,
+          halfDisplayCanvasWidth,
+          halfDisplayCanvasHeight
+        );
+        // Rotate the canvas projection matrix
+        this.rotateForPerspectiveViewport(
+          displayCanvasContext,
+          i
+        );
         // Blit the viewport from the render canvas on to the diplay canvas
         displayCanvasContext.drawImage(
           renderCanvas,
-          viewport.left * 2 * displayCanvasWidth,
-          viewportDisplayCanvasOriginY,
+          i * displayCanvasWidth * pixelRatio,
+          0,
+          viewportWidth * pixelRatio,
+          viewportHeight * pixelRatio,
+          -1 * halfDisplayCanvasWidth,
+          0,
           viewportWidth,
-          viewportHeight,
-          viewportDisplayCanvasOriginX,
-          viewportDisplayCanvasOriginY,
-          viewportDisplayCanvasOriginX + viewportWidth,
           viewportHeight
         );
         // Return to the original matrix state
         displayCanvasContext.restore();
       }
-      // Make sure the projector gets the frame data
-      let frameDataUrl = displayCanvas.toBlob( function(blob) {
-        let url = URL.createObjectURL(blob);
-        this.props.dispatch(sendFrameToProjector(url));
-      }.bind(this), "image/jpeg", 0.5);
+      // Undo the translation
+      displayCanvasContext.restore();
     }
     // Resume the paint loop
     this.displayCanvasPaintRequestId = requestAnimationFrame(
@@ -387,15 +329,200 @@ export default class Canvas extends React.Component {
     );
   }
 
+  /**
+   * Called whenever a snapshot of the display canvas needs to be sent to the
+   * projector over WebRTC. This function invokes itself kind of like a loop.
+   */
+  onTransmitFrame = () => {
+    let beginTime = Date.now();
+    this.displayCanvas.toBlob(
+      blob => {
+        this.props.dispatch(
+          sendFrameToProjector(URL.createObjectURL(blob))
+        );
+        let elapsedTime = Date.now() - beginTime;
+        let timeTillNextTransmission = (
+          this.frameTransmissionPeriod - elapsedTime
+        );
+        if (timeTillNextTransmission < 0) {
+          // Adjust the transmission period to be longer
+          this.frameTransmissionPeriod -= timeTillNextTransmission / 2;
+          // Run the next transmission ASAP
+          timeTillNextTransmission = 0;
+        } else {
+          // Adjust the transmission period to be shorter
+          this.frameTransmissionPeriod -= timeTillNextTransmission / 2;
+        }
+        this.transmitFrameTimeoutRef = setTimeout(
+          this.onTransmitFrame,
+          timeTillNextTransmission
+        );
+      },
+      'image/jpeg', // frame encoding
+      0.5 // frame quality
+    );
+  }
+
   /**************************** HELPER FUNCTIONS *****************************/
 
   /**
+   * Figures out how big each perspective viewport should be.
+   *
+   * @return {Object} Object with width and height properties
+   */
+  calculatePerspectiveViewportDimensions = () => {
+    let projectorViewportWidth = this.props.width;
+    let projectorViewportHeight = this.props.height;
+    // Calculate the perspective viewport dimensions
+    let perspectiveViewportWidth;
+    let perspectiveViewportHeight;
+    if (projectorViewportWidth < projectorViewportHeight) {
+      perspectiveViewportWidth = projectorViewportWidth;
+      perspectiveViewportHeight = perspectiveViewportWidth / 2;
+    } else {
+      perspectiveViewportWidth = projectorViewportHeight;
+      perspectiveViewportHeight = perspectiveViewportWidth / 2;
+    }
+
+    return { perspectiveViewportWidth, perspectiveViewportHeight };
+  }
+
+  /**
+   * Calculates how big the render canvas should be.
+   *
+   * @return {Object} Object specifying the width and height of render canvas
+   */
+  calculateRenderCanvasDimensions = () => {
+    let {
+      perspectiveViewportWidth,
+      perspectiveViewportHeight
+    } = this.calculatePerspectiveViewportDimensions();
+    return {
+      renderCanvasWidth: 4 * perspectiveViewportWidth,
+      renderCanvasHeight: perspectiveViewportHeight,
+    };
+  }
+
+  /**
+   * Calculates how big the display canvas should be.
+   *
+   * @return {Object} Object specifying the width and height of display canvas
+   */
+  calculateDisplayCanvasDimensions = () => {
+    let {
+      perspectiveViewportWidth,
+      perspectiveViewportHeight
+    } = this.calculatePerspectiveViewportDimensions();
+    return {
+      displayCanvasWidth: perspectiveViewportWidth,
+      displayCanvasHeight: perspectiveViewportWidth
+    };
+  }
+
+  /**
+   * Creates a triangular clipping region for the specified viewport.
+   * @param  {Canvas2DRenderingContext} ctx
+   * @param  {Number} viewportIndex           the index of the viewport
+   * @param  {Number} halfDisplayCanvasWidth  the width of the display canvas / 2
+   * @param  {Number} halfDisplayCanvasHeight the height of the display canvas / 2
+   */
+  clipForPerspectiveViewport = (
+    ctx,
+    viewportIndex,
+    halfDisplayCanvasWidth,
+    halfDisplayCanvasHeight
+  ) => {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    switch (viewportIndex) {
+      case VIEWPORT_FRONT:
+        ctx.lineTo(
+          halfDisplayCanvasWidth,
+          halfDisplayCanvasHeight
+        );
+        ctx.lineTo(
+          (-1 * halfDisplayCanvasWidth),
+          halfDisplayCanvasHeight
+        );
+        break;
+      case VIEWPORT_RIGHT:
+        ctx.lineTo(
+          halfDisplayCanvasWidth,
+          (-1 * halfDisplayCanvasHeight)
+        );
+        ctx.lineTo(
+          halfDisplayCanvasWidth,
+          halfDisplayCanvasHeight
+        );
+        break;
+      case VIEWPORT_BACK:
+        ctx.lineTo(
+          halfDisplayCanvasWidth,
+          (-1 * halfDisplayCanvasHeight)
+        );
+        ctx.lineTo(
+          (-1 * halfDisplayCanvasWidth),
+          (-1 * halfDisplayCanvasHeight)
+        );
+        break;
+      case VIEWPORT_LEFT:
+        ctx.lineTo(
+          (-1 * halfDisplayCanvasWidth),
+          (-1 * halfDisplayCanvasWidth)
+        );
+        ctx.lineTo(
+          (-1 * halfDisplayCanvasWidth),
+          halfDisplayCanvasHeight
+        );
+        break;
+    }
+    ctx.clip();
+  }
+
+  /**
+   * Rotates the display canvas for specified viewport.
+   *
+   * @param  {Canvas2DRenderingContext} ctx
+   * @param  {Number} viewportIndex the index of the viewport being rendered
+   */
+  rotateForPerspectiveViewport = (
+    ctx,
+    viewportIndex
+  ) => {
+    switch (viewportIndex) {
+      case VIEWPORT_RIGHT:
+        ctx.rotate(-1 * Math.PI / 2);
+        break;
+      case VIEWPORT_BACK:
+        ctx.rotate(-1 * Math.PI);
+        break;
+      case VIEWPORT_LEFT:
+        ctx.rotate(Math.PI / 2);
+        break;
+    }
+  }
+
+  /**
    * Creates the WebGL context and the render canvas.
+   * Renders each of the four perspectives in sequence. Each perspective
+   * viewport is a rectangle with a width twice that of its height. Its width
+   * is half the shortest side of the projector viewport.
+   *
+   * +---+---+---+---+
+   * | F | R | B | L |
+   * +---+---+---+---+
+   *
+   * F = Front Perspective
+   * R = Right Perspective
+   * B = Back Perspective
+   * L = Left Perspective
    */
   createRenderCanvas = () => {
-    // Calculate canvas dimensions
-    let renderCanvasWidth   = 2 * this.props.width;
-    let renderCanvasHeight  = this.props.height;
+    let perspectiveViewports = this.perspectiveViewports;
+    let {
+      renderCanvasWidth,
+      renderCanvasHeight
+    } = this.calculateRenderCanvasDimensions();
     // Calculate the camera distance
     let cameraDistance = calculateCameraDistance(
       FIELD_OF_VIEW,
@@ -408,19 +535,16 @@ export default class Canvas extends React.Component {
         (this.props.boundingBox.max.y - this.props.boundingBox.min.y)
       )
     );
-    // Create a static reference to the origin
-    let originVector = new Vector3(0, 0, 0);
+    // Create a static reference to the origin & the aspect ratio
+    let originVector            = new Vector3(0, 0, 0);
+    let perspectiveAspectRatio  = 2; // 2 * height : 1 * height
     // Create a camera for each viewport
-    let viewports = this.viewports;
     let viewport, camera;
-    for (let i = 0; i < viewports.length; i++) {
-      viewport  = viewports[i];
+    for (let i = 0; i < perspectiveViewports.length; i++) {
+      viewport  = perspectiveViewports[i];
       camera    = new PerspectiveCamera(
         FIELD_OF_VIEW,
-        (
-          (renderCanvasWidth * viewport.width) /
-          (renderCanvasHeight * viewport.height)
-        ),
+        perspectiveAspectRatio,
         1,
         10000
       );
@@ -455,10 +579,6 @@ export default class Canvas extends React.Component {
     scene.add(this.props.model);
     // Init the renderer
     let renderer = new WebGLRenderer();
-    let rendererDimensions = {
-      width:  renderCanvasWidth,
-      height: renderCanvasHeight
-    };
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(renderCanvasWidth, renderCanvasHeight);
     // Add the renderer dom element to the canvas container
@@ -467,7 +587,7 @@ export default class Canvas extends React.Component {
     // Update instance vars
     this.scene = scene;
     this.renderer = renderer;
-    this.rendererDimensions = rendererDimensions;
+    this.rendererDimensions = { renderCanvasWidth, renderCanvasHeight };
     this.renderCanvasCreated = true;
   }
 
@@ -475,21 +595,24 @@ export default class Canvas extends React.Component {
    * Creates the canvas designated for formatting the WebGL output for the projector.
    */
   createDisplayCanvas = () => {
-    let pixelDensity = window.devicePixelRatio;
+    let {
+      displayCanvasWidth,
+      displayCanvasHeight
+    } = this.calculateDisplayCanvasDimensions();
+
     let displayCanvas = document.createElement('canvas');
-    let displayCanvasDimensions = {
-      width:  this.props.width * pixelDensity,
-      height: this.props.height * pixelDensity
-    };
     displayCanvas.className = 'canvas-container__display-canvas';
-    displayCanvas.width = displayCanvasDimensions.width;
-    displayCanvas.height = displayCanvasDimensions.height;
+    displayCanvas.width = displayCanvasWidth;
+    displayCanvas.height = displayCanvasHeight;
     // Append the display canvas to the DOM
     this.refs.container.appendChild(displayCanvas);
     // Update instance vars
     this.displayCanvas = displayCanvas;
-    this.displayCanvasDimensions = displayCanvasDimensions;
     this.displayCanvasCreated = true;
+    this.displayCanvasDimensions = {
+      displayCanvasWidth,
+      displayCanvasHeight
+    };
     // Perform initial positioning
     this.repositionDisplayCanvas();
   }
@@ -502,17 +625,18 @@ export default class Canvas extends React.Component {
     // Only do anything if initialized
     if (this.displayCanvasCreated) {
       let props = nextProps || this.props;
+      let {
+        displayCanvasWidth,
+        displayCanvasHeight
+      } = this.calculateDisplayCanvasDimensions();
       // Variables
-      let pixelDensity  = window.devicePixelRatio;
-      let displayCanvas = this.displayCanvas;
-      let container     = this.refs.container;
+      let displayCanvas           = this.displayCanvas;
+      let container               = this.refs.container;
       // Calculate the aspect ratio of the canvas when compared to the container
-      let containerWidth      = container.clientWidth;
-      let containerHeight     = container.clientHeight;
-      let displayCanvasWidth  = props.width * pixelDensity;
-      let displayCanvasHeight = props.height * pixelDensity;
-      let widthRatio          = containerWidth / displayCanvasWidth;
-      let heightRatio         = containerHeight / displayCanvasHeight;
+      let containerWidth  = container.clientWidth;
+      let containerHeight = container.clientHeight;
+      let widthRatio      = containerWidth / displayCanvasWidth;
+      let heightRatio     = containerHeight / displayCanvasHeight;
       // Figure out if we have to scale down the canvas
       let scale = 1;
       if (widthRatio < 1) {
