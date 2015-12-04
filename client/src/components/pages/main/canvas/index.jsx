@@ -333,15 +333,9 @@ export default class Canvas extends React.Component {
    * projector over WebRTC. This function invokes itself kind of like a loop.
    */
   onTransmitFrame = () => {
-    let beginTime = Date.now();
-    this.displayCanvas.toBlob(
-      blob => {
-        this.props.dispatch(
-          sendFrameToProjector(URL.createObjectURL(blob))
-        );
-      },
-      'image/jpeg', // frame encoding
-      0.5 // frame quality
+    let imageURI = this.displayCanvas.toDataURL('image/jpeg', 0.5);
+    this.props.dispatch(
+      sendFrameToProjector(imageURI)
     );
   }
 
