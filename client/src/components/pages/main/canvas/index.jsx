@@ -146,8 +146,6 @@ export default class Canvas extends React.Component {
     this.displayCanvasPaintRequestId  = requestAnimationFrame(
       this.onDisplayCanvasPaint
     );
-    // Start the frame transmission loop
-    this.onTransmitFrame();
   }
 
   componentWillUnmount = () => {
@@ -323,6 +321,7 @@ export default class Canvas extends React.Component {
       // Undo the translation
       displayCanvasContext.restore();
     }
+    this.onTransmitFrame();
     // Resume the paint loop
     this.displayCanvasPaintRequestId = requestAnimationFrame(
       this.onDisplayCanvasPaint
@@ -340,7 +339,6 @@ export default class Canvas extends React.Component {
         this.props.dispatch(
           sendFrameToProjector(URL.createObjectURL(blob))
         );
-        this.onTransmitFrame();
       },
       'image/jpeg', // frame encoding
       0.5 // frame quality
