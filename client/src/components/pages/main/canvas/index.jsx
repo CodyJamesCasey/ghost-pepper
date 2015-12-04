@@ -340,23 +340,6 @@ export default class Canvas extends React.Component {
         this.props.dispatch(
           sendFrameToProjector(URL.createObjectURL(blob))
         );
-        let elapsedTime = Date.now() - beginTime;
-        let timeTillNextTransmission = (
-          this.frameTransmissionPeriod - elapsedTime
-        );
-        if (timeTillNextTransmission < 0) {
-          // Adjust the transmission period to be longer
-          this.frameTransmissionPeriod -= timeTillNextTransmission / 2;
-          // Run the next transmission ASAP
-          timeTillNextTransmission = 0;
-        } else {
-          // Adjust the transmission period to be shorter
-          this.frameTransmissionPeriod -= timeTillNextTransmission / 2;
-        }
-        this.transmitFrameTimeoutRef = setTimeout(
-          this.onTransmitFrame,
-          timeTillNextTransmission
-        );
       },
       'image/jpeg', // frame encoding
       0.5 // frame quality
