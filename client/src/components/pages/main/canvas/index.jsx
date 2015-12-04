@@ -131,8 +131,6 @@ export default class Canvas extends React.Component {
     }
   ]
 
-  middleOffset                    = 0
-
   /************************** REACT LIFECYCLE HOOKS **************************/
 
   componentDidMount = () => {
@@ -141,8 +139,6 @@ export default class Canvas extends React.Component {
     this.createDisplayCanvas();
     // Subscribe to window resize events
     window.addEventListener('resize', this.onWindowResized);
-    // Subscribe to key up events
-    document.body.addEventListener('keyup', this.handleKeyUp);
     // Start the paint loops
     this.renderCanvasPaintRequestId   = requestAnimationFrame(
       this.onRenderCanvasPaint
@@ -157,8 +153,6 @@ export default class Canvas extends React.Component {
   componentWillUnmount = () => {
     // Unsubscribe from window resize events
     window.removeEventListener('resize', this.onWindowResized);
-    // Unsubscribe to key up events
-    document.body.removeEventListener('keyup', this.handleKeyUp);
     // Cancel the next paint cycle
     if (this.renderCanvasPaintRequestId) {
       cancelAnimationFrame(this.renderCanvasPaintRequestId);
@@ -191,18 +185,6 @@ export default class Canvas extends React.Component {
       WINDOW_RESIZE_WAIT_PERIOD
     );
   }
-
-  /**
-   * Called on key up.
-   */
-   handleKeyUp = (e) => {
-    if (e.which === 38) {
-      this.middleOffset++;
-    } else if (e.which === 40) {
-      this.middleOffset--;
-    }
-    console.log(this.middleOffset);
-   }
 
   /**
    * Called whenever its time for the render canvas to update. Uses
@@ -323,11 +305,6 @@ export default class Canvas extends React.Component {
           displayCanvasContext,
           i
         );
-        let dx = (-1 * halfDisplayCanvasWidth),
-              dy = this.middleOffset,
-              dWidth = viewportWidth,
-              dHeight = viewportHeight - this.middleOffset;
-
         // Blit the viewport from the render canvas on to the diplay canvas
         displayCanvasContext.drawImage(
           renderCanvas,
@@ -335,10 +312,10 @@ export default class Canvas extends React.Component {
           0,
           viewportWidth * pixelRatio,
           viewportHeight * pixelRatio,
-          dx,
-          dy,
-          dWidth,
-          dHeight
+          -1 * halfDisplayCanvasWidth,
+          0,
+          viewportWidth,
+          viewportHeight
         );
         // Return to the original matrix state
         displayCanvasContext.restore();
@@ -363,6 +340,7 @@ export default class Canvas extends React.Component {
         this.props.dispatch(
           sendFrameToProjector(URL.createObjectURL(blob))
         );
+        this.onTransmitFrame();
       },
       'image/jpeg', // frame encoding
       0.5 // frame quality
@@ -682,7 +660,7 @@ export default class Canvas extends React.Component {
 
   render() {
     return (
-      <div ref="container" className="canvas-container" />
+      <div ref="container" className="canvas-container"/>
     );
   }
 }
