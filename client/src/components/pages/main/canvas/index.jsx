@@ -17,19 +17,20 @@ import { calculateCameraDistance, rotateAboutAxis } from 'util/model';
 // How do we wait for there to me no more window resize events before we
 // actually trigger changes to the DOM? WINDOW_RESIZE_WAIT_PERIOD is how long
 // we wait in milliseconds.
-const WINDOW_RESIZE_WAIT_PERIOD   = 200;
+const WINDOW_RESIZE_WAIT_PERIOD       = 200;
 // How wide the field of view of the camera is in degrees
-const FIELD_OF_VIEW               = 45;
+const FIELD_OF_VIEW                   = 45;
 // The background color of the canvas
-const BACKGROUND_COLOR            = (new Color()).setRGB(0, 0, 0);
+const BACKGROUND_COLOR                = (new Color()).setRGB(0, 0, 0);
 // What percent space to leave between the viewport boundary and the model
-const VERTICAL_VIEWPORT_PADDING   = 0.1;
-const HORIZONTAL_VIEWPORT_PADDING = 0.15;
+const UPPER_VERTICAL_VIEWPORT_PADDING = 0.1;
+const LOWER_VERTICAL_VIEWPORT_PADDING = 0.0;
+const HORIZONTAL_VIEWPORT_PADDING     = 0.15;
 // Indices of the perspectiveViewports array
-const VIEWPORT_FRONT              = 0;
-const VIEWPORT_RIGHT              = 1;
-const VIEWPORT_BACK               = 2;
-const VIEWPORT_LEFT               = 3;
+const VIEWPORT_FRONT                  = 0;
+const VIEWPORT_RIGHT                  = 1;
+const VIEWPORT_BACK                   = 2;
+const VIEWPORT_LEFT                   = 3;
 // Target frame transmission period
 const DEFAULT_FRAME_TRANS_PERIOD  = 1000 / 25; // 25 frames per second
 
@@ -188,9 +189,9 @@ export default class Canvas extends React.Component {
    */
    handleKeyUp = (e) => {
     if (e.which === 38) {
-      this.middleOffset++;
+      this.middleOffset += 20;
     } else if (e.which === 40) {
-      this.middleOffset--;
+      this.middleOffset -= 20;
     }
    }
 
@@ -337,10 +338,11 @@ export default class Canvas extends React.Component {
           i
         );
 
-        let dx = (-1 * halfDisplayCanvasWidth),
-            dy = this.middleOffset,
-            dWidth = viewportWidth,
-            dHeight = viewportHeight - this.middleOffset;
+        let middleOffset  = this.middleOffset;
+        let dx            = (-1 * halfDisplayCanvasWidth) + middleOffset,
+            dy            = middleOffset,
+            dWidth        = viewportWidth - (middleOffset * 2),
+            dHeight       = viewportHeight - middleOffset;
         // Blit the viewport from the render canvas on to the diplay canvas
         displayCanvasContext.drawImage(
           renderCanvas,
@@ -538,17 +540,18 @@ export default class Canvas extends React.Component {
       renderCanvasHeight
     } = this.calculateRenderCanvasDimensions();
     // Calculate the camera distance
+    let modelSizeX = this.props.boundingBox.max.x - this.props.boundingBox.min.x;
+    let modelSizeY = this.props.boundingBox.max.y - this.props.boundingBox.min.y;
+    let modelSizeZ = this.props.boundingBox.max.z - this.props.boundingBox.min.z;
+    let modelVisibleWidth = modelSizeX > modelSizeZ ? modelSizeX : modelSizeZ;
+    let modelVisibleHeight = modelSizeY;
     let cameraDistance = calculateCameraDistance(
       FIELD_OF_VIEW,
-      (
-        (1 + (HORIZONTAL_VIEWPORT_PADDING * 2)) *
-        (this.props.boundingBox.max.x - this.props.boundingBox.min.x)
-      ),
-      (
-        (1 + (VERTICAL_VIEWPORT_PADDING * 2)) *
-        (this.props.boundingBox.max.y - this.props.boundingBox.min.y)
-      )
+      (1 + (HORIZONTAL_VIEWPORT_PADDING * 2)) * modelVisibleWidth,
+      (1 + UPPER_VERTICAL_VIEWPORT_PADDING + LOWER_VERTICAL_VIEWPORT_PADDING) * modelVisibleHeight
     );
+    let modelHeightOffset = (UPPER_VERTICAL_VIEWPORT_PADDING * modelVisibleHeight) * 1.3;
+    console.log('modelHeightOffset', modelHeightOffset);
     // Create a static reference to the origin & the aspect ratio
     let originVector            = new Vector3(0, 0, 0);
     let perspectiveAspectRatio  = 2; // 2 * height : 1 * height
@@ -564,7 +567,7 @@ export default class Canvas extends React.Component {
       );
       // Place the camera in 3D space
       camera.position.x = viewport.eye[0] * cameraDistance;
-      camera.position.y = viewport.eye[1] * cameraDistance;
+      camera.position.y = modelHeightOffset;
       camera.position.z = viewport.eye[2] * cameraDistance;
       // Set the up vector
       camera.up.x = 0;

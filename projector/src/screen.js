@@ -21,8 +21,7 @@ function onWindowResize() {
   // Keep the canvas the same size as the window
   resizeCanvas();
   // Trigger the event handler
-  if (eventHandler && ((new Date()).getTime() - lastUpdated > WINDOW_RESIZE_NOTIFICATION_THRESHOLD)) {
-    lastUpdated = (new Date()).getTime();
+  if (eventHandler) {
     eventHandler(window.innerWidth, window.innerHeight);
   }
 };
@@ -64,7 +63,7 @@ function drawFrame() {
   frameAnimationFrameRef = requestAnimationFrame(drawFrame);
 }
 
-export function create(socket) {
+export function create() {
   // Create the canvas first
   canvas = document.createElement('canvas');
   document.body.appendChild(canvas);
@@ -77,13 +76,18 @@ export function create(socket) {
   img = new Image();
   // Subscribe to window resize
   window.onresize = onWindowResize();
+  setInterval(() => {
+    if (document.body.clientWidth !== windowWidth ||
+      document.body.clientHeight !== windowHeight) {
+      onWindowResize();
+    }
+  }, 1000);
   // Start painting frames
   drawFrame();
 }
 
 export function paint(dataUrl) {
   img.src = dataUrl;
-  console.log('paint');
 }
 
 export function clear() {
@@ -93,8 +97,7 @@ export function clear() {
 export function bind(newEventHandler) {
   eventHandler = newEventHandler;
   // Trigger initial event
-  eventHandler(window.innerWidth, window.innerHeight);
-  lastUpdated = (new Date()).getTime();
+  eventHandler(windowWidth, windowHeight);
 }
 
 export function unbind() {
