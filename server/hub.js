@@ -47,7 +47,7 @@ function onClientDisconnect(conn, clientId) {
   clientMap.delete(clientId);
   console.log(`Client with id "${clientId}" disconnected.`);
   // Check if its the current client
-  if (currentClientId === clientId) {
+  if (currentClientId === clientId && currentProjector) {
     currentProjector.emit(EVENT_CLIENT_DISCONNECTED, {});
     // Clear the current client id
     currentClientId = null;
@@ -106,12 +106,14 @@ function onProjectorDisconnected(conn, projectorId) {
     if (currentClientId) {
       // Notify the client
       let currentClient = clientMap.get(currentClientId);
-      currentClient.emit(EVENT_PROJECTOR_DISCONNECTED, {});
-      // Now, put it at the front of the queue
-      clientQueue.unshift(currentClientId);
-      console.log(`Client with id "${currentClientId}" was put at the beginning of the client queue.`);
-      // Clear the current client information
-      currentClientId = null;
+      if(currentClient) {
+        currentClient.emit(EVENT_PROJECTOR_DISCONNECTED, {});
+        // Now, put it at the front of the queue
+        clientQueue.unshift(currentClientId);
+        console.log(`Client with id "${currentClientId}" was put at the beginning of the client queue.`);
+        // Clear the current client information
+        currentClientId = null;
+      }
     }
   }
 }

@@ -1,7 +1,11 @@
+mocha.setup('bdd');
 var superagent = require('superagent');
-var expect = require("chai").expect;
+var chai = require("chai");
+chai.config.includeStack = true;
+var expect = chai.expect;
+var Peer = require("peerjs");
 
-port = 3000;
+var port = 3000;
 
 var io = require('socket.io-client');
 var socketURL = 'http://0.0.0.0:' + port;
@@ -90,3 +94,33 @@ describe('projectorpage', function(){
     })
   });
 });
+/*
+describe('projectorWebRTC', function() {
+  it('should respond to connection',function(done) {
+    var projectorId  = generate();
+    var peer        = new Peer(projectorId, {
+      host: 'localhost',
+      path: '/api/peer',
+      port: 3000
+    });
+    peer.on('connection', tunnel => {
+      tunnel.on('open', () => {
+        expect(true);
+        done();
+      });
+    });
+
+    var client = io.connect(socketURL, options);
+    client.on('connect', function() {
+      var clientId  = generate();
+      client.emit(EVENT_CLIENT_READY, { clientId: clientId });
+      client.on(EVENT_PROJECTOR_READY, function() {
+        peer.connect(projectorId);
+      });
+    });
+    var projector = io.connect(socketURL, options);
+    projector.emit(EVENT_PROJECTOR_READY, { projectorId: projectorId });
+  });
+});
+*/
+mocha.run();
