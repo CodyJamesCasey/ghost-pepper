@@ -3,10 +3,6 @@ import Peer from 'peerjs';
 
 import { generate as newUUID } from './uuid';
 import {
-  bind as bindToLeap,
-  unbind as unbindFromLeap
-} from './leap';
-import {
   paint as paintToScreen,
   bind as bindToScreenResize,
   unbind as unbindFromScreenResize,
@@ -39,10 +35,6 @@ export function start() {
         type:     EVENT_RESOLUTION_CHANGED,
         payload:  { width, height }
       }));
-      bindToLeap(theta => tunnel.send({
-        type:     EVENT_ROTATION_VECTOR_CHANGED,
-        payload:  theta
-      }));
     });
     tunnel.on('data', (data) => {
       switch (data.type) {
@@ -58,7 +50,6 @@ export function start() {
       console.error('Error via tunnel:', err);
     });
     tunnel.on('close', () => {
-      unbindFromLeap();
       unbindFromScreenResize();
       clearScreen();
     });
@@ -66,7 +57,6 @@ export function start() {
 
   // Bind socket listeners
   socket.on(EVENT_CLIENT_DISCONNECTED, () => {
-    unbindFromLeap();
     unbindFromScreenResize();
     clearScreen();
   });

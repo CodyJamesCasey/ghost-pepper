@@ -1,3 +1,4 @@
+import Leap from 'leapjs';
 import React from 'react';
 import { connect } from 'react-redux';
 import {
@@ -57,25 +58,10 @@ export default class Canvas extends React.Component {
     // The desired width of the viewport
     width:        React.PropTypes.number.isRequired,
     // The desired height of the viewport
-    height:       React.PropTypes.number.isRequired,
-    // The rotation vector (each dimension is in radians)
-    thetaX:       React.PropTypes.number.isRequired,
-    thetaY:       React.PropTypes.number.isRequired,
-    thetaZ:       React.PropTypes.number.isRequired,
+    height:       React.PropTypes.number.isRequired
   }
 
   /*************************** INSTANCE VARIABLES ****************************/
-
-  // React component props
-  props = {
-    dispatch: () => {},
-    model:    null,
-    width:    0,
-    height:   0,
-    thetaX:   0,
-    thetaY:   0,
-    thetaZ:   0
-  }
 
   // Paint animation frame ref
   renderCanvasPaintRequestId    = null
@@ -130,8 +116,13 @@ export default class Canvas extends React.Component {
       camera:     null
     }
   ]
-
-  middleOffset                    = 0;
+  // Vector indicating how the model should be rotated
+  rotationVector = {
+    x: 0,
+    y: 0,
+    z: 0
+  }
+  middleOffset  = 0
 
   /************************** REACT LIFECYCLE HOOKS **************************/
 
@@ -143,6 +134,8 @@ export default class Canvas extends React.Component {
     window.addEventListener('resize', this.onWindowResized);
     // Subscribe to key up events
     document.body.addEventListener('keyup', this.handleKeyUp);
+    // Subscribe to leap motion events
+    Leap.loop(this.onLeapMotionFrame);
     // Start the paint loops
     this.renderCanvasPaintRequestId   = requestAnimationFrame(
       this.onRenderCanvasPaint
@@ -223,11 +216,11 @@ export default class Canvas extends React.Component {
         rendererDimensions.renderCanvasHeight = renderCanvasHeight;
       }
       // Rotate the scene according to the rotation vector
-      let modelRotation = this.props.model.rotation;
-      let { thetaX, thetaY, thetaZ } = this.props;
-      modelRotation.x = thetaX || 0;
-      modelRotation.y = thetaY || 0;
-      modelRotation.z = thetaZ || 0;
+      let modelRotation   = this.props.model.rotation;
+      let rotationVector  = this.rotationVector;
+      modelRotation.x = rotationVector.x || 0;
+      modelRotation.y = rotationVector.y || 0;
+      modelRotation.z = rotationVector.z || 0;
       // Render each viewport
       let renderer              = this.renderer;
       let perspectiveViewports  = this.perspectiveViewports;
@@ -251,6 +244,29 @@ export default class Canvas extends React.Component {
     this.renderCanvasPaintRequestId = requestAnimationFrame(
       this.onRenderCanvasPaint
     );
+  }
+
+  onLeapMotionFrame = (frame) => {
+    let vector = this.rotationVector;
+    // Only care about the first hand
+    let hand = frame.hands.length > 0 ? frame.hands[0] : null;
+    if (hand) {
+      // Update the theta object
+      let newX = hand.pitch();
+      let newY = hand.yaw();
+      let newZ = hand.roll();
+      // Check what has changed
+      let thetaChanged = false;
+      if (vector.x !== newX) {
+        vector.x = newX;
+      }
+      if (vector.y !== newY) {
+        vector.y = newY;
+      }
+      if (vector.z !== newZ) {
+        vector.z = newZ;
+      }
+    }
   }
 
   /**

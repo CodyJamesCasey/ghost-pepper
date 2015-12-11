@@ -120,9 +120,11 @@ export default class ModelLoader extends React.Component {
           child.geometry.boundingBox
         );
         // Apply the translation in every direction
-        if (centeringVector[0]) model.translateX(centeringVector[0]);
-        if (centeringVector[1]) model.translateY(centeringVector[1]);
-        if (centeringVector[2]) model.translateZ(centeringVector[2]);
+        child.geometry.translate(
+          centeringVector[0],
+          centeringVector[1],
+          centeringVector[2]
+        );
         // Update the store now that we have the bounding box
         dispatch(set3DModel(model, child.geometry.boundingBox));
         // Declare that the model has been set

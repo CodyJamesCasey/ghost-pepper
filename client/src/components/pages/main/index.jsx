@@ -14,9 +14,6 @@ require('./main.scss');
   boundingBox:  state.currentModelBoundingBox,
   width:        state.targetResolution.width,
   height:       state.targetResolution.height,
-  thetaX:       state.rotationVector.x,
-  thetaY:       state.rotationVector.y,
-  thetaZ:       state.rotationVector.z,
   socketLive:   state.socketLive,
   tunnelLive:   state.tunnelLive
 }))
@@ -66,9 +63,6 @@ export default class MainPage extends React.Component {
           model={this.props.model}
           width={this.props.width}
           height={this.props.height}
-          thetaX={this.props.thetaX}
-          thetaY={this.props.thetaY}
-          thetaZ={this.props.thetaZ}
           boundingBox={this.props.boundingBox} />
       );
     }
